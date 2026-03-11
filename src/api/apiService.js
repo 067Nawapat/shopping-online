@@ -60,6 +60,11 @@ export const apiService = {
     return response.data;
   },
 
+  getBanners: async () => {
+    const response = await api.get('api.php?action=get_banners');
+    return response.data;
+  },
+
   // ── Auth & User ──────────────────────────────────────────
   register: async (userData) => {
     const response = await api.post('api.php?action=register', userData);
