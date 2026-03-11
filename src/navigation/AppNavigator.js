@@ -13,6 +13,11 @@ import CartScreen from '../screens/CartScreen';
 import NotificationsScreen from '../screens/NotificationsScreen';
 import CouponsScreen from '../screens/CouponsScreen';
 import AddressListScreen from '../screens/AddressListScreen';
+import AddAddressScreen from '../screens/AddAddressScreen';
+import PaymentMethodsScreen from '../screens/PaymentMethodsScreen';
+import HelpCenterScreen from '../screens/HelpCenterScreen';
+import ContactUsScreen from '../screens/ContactUsScreen';
+import ProductDetailScreen from '../screens/ProductDetailScreen';
 
 import CustomTabBar from '../components/CustomTabBar';
 import { withScreenTransition } from '../components/ScreenTransition';
@@ -31,38 +36,48 @@ const CartScreenAnimated = withScreenTransition(CartScreen);
 const NotificationsScreenAnimated = withScreenTransition(NotificationsScreen);
 const CouponsScreenAnimated = withScreenTransition(CouponsScreen);
 const AddressListScreenAnimated = withScreenTransition(AddressListScreen);
+const AddAddressScreenAnimated = withScreenTransition(AddAddressScreen);
+const PaymentMethodsScreenAnimated = withScreenTransition(PaymentMethodsScreen);
+const HelpCenterScreenAnimated = withScreenTransition(HelpCenterScreen);
+const ContactUsScreenAnimated = withScreenTransition(ContactUsScreen);
+const ProductDetailScreenAnimated = withScreenTransition(ProductDetailScreen);
 
-const ProfileStack = () => (
-  <Stack.Navigator
-    screenOptions={{
-      headerShown: false,
-      animationEnabled: true,
-      gestureEnabled: true,
-      cardStyle: { backgroundColor: '#fff' },
-    }}
+// Main Tab Bar Navigator
+const TabNavigator = () => (
+  <Tab.Navigator
+    tabBar={(props) => <CustomTabBar {...props} />}
+    screenOptions={{ headerShown: false }}
   >
-    <Stack.Screen name="ProfileHome" component={ProfileScreenAnimated} />
-    <Stack.Screen name="Auth" component={AuthScreenAnimated} />
-    <Stack.Screen name="Login" component={LoginScreenAnimated} />
-    <Stack.Screen name="Register" component={RegisterScreenAnimated} />
-    <Stack.Screen name="UserInfo" component={UserInfoScreenAnimated} />
-    <Stack.Screen name="Coupons" component={CouponsScreenAnimated} />
-    <Stack.Screen name="AddressList" component={AddressListScreenAnimated} />
-  </Stack.Navigator>
+    <Tab.Screen name="หน้าหลัก" component={HomeScreenAnimated} />
+    <Tab.Screen name="ตะกร้า" component={CartScreenAnimated} />
+    <Tab.Screen name="แจ้งเตือน" component={NotificationsScreenAnimated} />
+    <Tab.Screen name="โปรไฟล์" component={ProfileScreenAnimated} />
+    <Tab.Screen name="ค้นหา" component={SearchScreenAnimated} />
+  </Tab.Navigator>
 );
 
+// Root Stack Navigator (Sub-screens here will hide the Tab Bar)
 const AppNavigator = () => {
   return (
-    <Tab.Navigator
-      tabBar={(props) => <CustomTabBar {...props} />}
-      screenOptions={{ headerShown: false }}
-    >
-      <Tab.Screen name="หน้าหลัก" component={HomeScreenAnimated} />
-      <Tab.Screen name="ตะกร้า" component={CartScreenAnimated} />
-      <Tab.Screen name="แจ้งเตือน" component={NotificationsScreenAnimated} />
-      <Tab.Screen name="โปรไฟล์" component={ProfileStack} />
-      <Tab.Screen name="ค้นหา" component={SearchScreenAnimated} />
-    </Tab.Navigator>
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="MainTabs" component={TabNavigator} />
+      
+      {/* Auth Screens */}
+      <Stack.Screen name="Auth" component={AuthScreenAnimated} />
+      <Stack.Screen name="Login" component={LoginScreenAnimated} />
+      <Stack.Screen name="Register" component={RegisterScreenAnimated} />
+
+      {/* Sub-screens (Hide Bottom Tab Bar) */}
+      <Stack.Screen name="UserInfo" component={UserInfoScreenAnimated} />
+      <Stack.Screen name="Coupons" component={CouponsScreenAnimated} />
+      <Stack.Screen name="AddressList" component={AddressListScreenAnimated} />
+      <Stack.Screen name="AddAddress" component={AddAddressScreenAnimated} />
+      <Stack.Screen name="PaymentMethods" component={PaymentMethodsScreenAnimated} />
+      <Stack.Screen name="HelpCenter" component={HelpCenterScreenAnimated} />
+      <Stack.Screen name="ContactUs" component={ContactUsScreenAnimated} />
+      <Stack.Screen name="SubNotifications" component={NotificationsScreenAnimated} />
+      <Stack.Screen name="ProductDetail" component={ProductDetailScreenAnimated} />
+    </Stack.Navigator>
   );
 };
 

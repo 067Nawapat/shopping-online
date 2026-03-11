@@ -7,7 +7,7 @@ export default StyleSheet.create({
   // ── Category Tab Bar (Pill Badges) ────────────────────────
   tabBar: {
     backgroundColor: COLORS.white,
-    paddingTop: 56,
+    paddingTop: SPACING.screenHeaderTop,
     paddingBottom: SPACING.md,
   },
   tabScrollContent: {

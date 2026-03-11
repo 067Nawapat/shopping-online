@@ -8,7 +8,7 @@ export default StyleSheet.create({
   header: {
     backgroundColor: COLORS.bgDark,
     paddingHorizontal: SPACING.lg,
-    paddingTop: SPACING.headerTop + 8,
+    paddingTop: SPACING.screenHeaderTop,
     paddingBottom: SPACING.base,
     flexDirection: 'row',
     alignItems: 'center',

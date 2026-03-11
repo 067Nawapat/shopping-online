@@ -5,15 +5,19 @@ import {
   SafeAreaView,
   ScrollView,
   TouchableOpacity,
-  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { apiService } from '../api/apiService';
 import styles from '../styles/ProfileScreen.styles';
 import { StatusItem, MenuItem } from '../components/ProfileComponents';
+import ConfirmModal from '../components/ConfirmModal';
 
 const ProfileScreen = ({ navigation }) => {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [orders, setOrders] = useState([]);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', checkUser);
@@ -21,34 +25,59 @@ const ProfileScreen = ({ navigation }) => {
   }, [navigation]);
 
   const checkUser = useCallback(async () => {
-    const userData = await apiService.getUser();
-    if (!userData) {
-      navigation.navigate('Auth');
-    } else {
-      setUser(userData);
+    setLoading(true);
+    try {
+      const userData = await apiService.getUser();
+      if (!userData) {
+        navigation.navigate('Auth');
+      } else {
+        setUser(userData);
+        fetchOrders(userData.id);
+      }
+    } catch (error) {
+      console.error('Check user error:', error);
+    } finally {
+      setLoading(false);
     }
   }, [navigation]);
 
-  const handleLogout = () => {
-    Alert.alert('ออกจากระบบ', 'คุณต้องการออกจากระบบใช่หรือไม่?', [
-      { text: 'ยกเลิก', style: 'cancel' },
-      {
-        text: 'ออกจากระบบ',
-        style: 'destructive',
-        onPress: async () => {
-          await apiService.logout();
-          setUser(null);
-          navigation.navigate('Auth');
-        },
-      },
-    ]);
+  const fetchOrders = async (userId) => {
+    try {
+      const data = await apiService.getOrders(userId);
+      setOrders(data || []);
+    } catch (error) {
+      console.error('Fetch orders error:', error);
+    }
   };
+
+  const handleLogout = async () => {
+    setShowLogoutModal(false);
+    await apiService.logout();
+    setUser(null);
+    navigation.navigate('Auth');
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="#0D0D0D" />
+      </SafeAreaView>
+    );
+  }
 
   if (!user) return null;
 
   const initials = user.name
     ? user.name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()
     : 'SA';
+
+  const orderCounts = {
+    pending: orders.filter(o => o.status === 'pending').length,
+    waiting: orders.filter(o => o.status === 'waiting').length,
+    verifying: orders.filter(o => o.status === 'verifying').length,
+    shipping: orders.filter(o => o.status === 'shipping').length,
+    cancelled: orders.filter(o => o.status === 'cancelled').length,
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -73,17 +102,17 @@ const ProfileScreen = ({ navigation }) => {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>การซื้อ</Text>
-            <TouchableOpacity style={styles.viewHistory}>
+            <TouchableOpacity style={styles.viewHistory} onPress={() => {}}>
               <Text style={styles.historyText}>ดูประวัติ</Text>
               <Ionicons name="chevron-forward" size={12} color="#CCC" />
             </TouchableOpacity>
           </View>
           <View style={styles.statusGrid}>
-            <StatusItem icon="clipboard-list-outline" label="กำลังตั้งรับ" />
-            <StatusItem icon="clock-outline" label="รอเป้าหมาย" />
-            <StatusItem icon="file-search-outline" label="ตรวจสอบ" />
-            <StatusItem icon="truck-delivery-outline" label="จัดส่ง" />
-            <StatusItem icon="close-circle-outline" label="ยกเลิก" />
+            <StatusItem icon="clipboard-list-outline" label={`กำลังตั้งรับ (${orderCounts.pending})`} />
+            <StatusItem icon="clock-outline" label={`รอเป้าหมาย (${orderCounts.waiting})`} />
+            <StatusItem icon="file-search-outline" label={`ตรวจสอบ (${orderCounts.verifying})`} />
+            <StatusItem icon="truck-delivery-outline" label={`จัดส่ง (${orderCounts.shipping})`} />
+            <StatusItem icon="close-circle-outline" label={`ยกเลิก (${orderCounts.cancelled})`} />
           </View>
           <TouchableOpacity style={styles.tierCard}>
             <Ionicons name="sparkles" size={22} color="#CCFF00" style={styles.tierIcon} />
@@ -125,12 +154,7 @@ const ProfileScreen = ({ navigation }) => {
           <MenuItem
             icon="card-outline"
             label="วิธีการชำระเงิน"
-            onPress={() => Alert.alert('Payment', 'Coming soon')}
-          />
-          <MenuItem
-            icon="notifications-outline"
-            label="การแจ้งเตือน"
-            onPress={() => Alert.alert('Notifications', 'Coming soon')}
+            onPress={() => navigation.navigate('PaymentMethods')}
           />
         </View>
 
@@ -142,23 +166,36 @@ const ProfileScreen = ({ navigation }) => {
           <MenuItem
             icon="help-circle-outline"
             label="ศูนย์ช่วยเหลือ"
-            onPress={() => Alert.alert('Help', 'Coming soon')}
+            onPress={() => navigation.navigate('HelpCenter')}
           />
           <MenuItem
             icon="chatbubble-outline"
             label="ติดต่อเรา"
-            onPress={() => Alert.alert('Contact', 'Coming soon')}
+            onPress={() => navigation.navigate('ContactUs')}
           />
         </View>
 
         {/* ── Logout ── */}
-        <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout} activeOpacity={0.7}>
+        <TouchableOpacity 
+          style={styles.logoutBtn} 
+          onPress={() => setShowLogoutModal(true)} 
+          activeOpacity={0.7}
+        >
           <Text style={styles.logoutText}>ออกจากระบบ</Text>
           <Text style={styles.versionText}>เวอร์ชัน 1.0.0</Text>
         </TouchableOpacity>
 
         <View style={{ height: 110 }} />
       </ScrollView>
+
+      <ConfirmModal
+        visible={showLogoutModal}
+        title="ออกจากระบบ"
+        message="คุณต้องการออกจากระบบใช่หรือไม่?"
+        confirmText="ออกจากระบบ"
+        onConfirm={handleLogout}
+        onCancel={() => setShowLogoutModal(false)}
+      />
     </SafeAreaView>
   );
 };

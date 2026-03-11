@@ -3,7 +3,6 @@ import {
   View,
   Text,
   SafeAreaView,
-  TextInput,
   ScrollView,
   Image,
   TouchableOpacity,
@@ -12,9 +11,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { apiService } from '../api/apiService';
+import ConfirmModal from '../components/ConfirmModal';
 import styles from '../styles/HomeScreen.styles';
-
-const CATEGORIES = ['สำหรับคุณ', 'Streetwear', 'Sports', 'Luxe', 'ของสะสม'];
 
 const QUICK_ACTIONS = [
   { id: '1', title: 'Ship Now', icon: 'airplane-outline' },
@@ -29,49 +27,126 @@ const QUICK_ACTIONS = [
   { id: '10', title: 'Mega Evo', icon: 'rocket-outline' },
 ];
 
-// ── Placeholder banner ─────────────────────────────────────
-// รูปจากแหล่งที่น่าเชื่อถือ (ไม่ใช้ via.placeholder.com ที่ deprecated)
 const BANNER_URI = 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&q=80';
 
 const HomeScreen = ({ navigation }) => {
+  const [categories, setCategories] = useState([{ id: 0, name: 'สำหรับคุณ' }]);
   const [activeCategory, setActiveCategory] = useState(0);
   const [promoProducts, setPromoProducts] = useState([]);
+  const [feedProducts, setFeedProducts] = useState([]);
+  const [wishlistIds, setWishlistIds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [user, setUser] = useState(null);
+  const [infoModal, setInfoModal] = useState(null);
 
   useEffect(() => {
-    fetchData();
-    fetchUser();
+    initialLoad();
   }, []);
+
+  const initialLoad = async () => {
+    setLoading(true);
+    const userData = await fetchUser();
+    await Promise.all([
+      fetchCategories(),
+      fetchProducts(0),
+      fetchFeedProducts(),
+      userData ? fetchWishlist(userData.id) : Promise.resolve(),
+    ]);
+    setLoading(false);
+  };
 
   const fetchUser = async () => {
     try {
       const userData = await apiService.getUser();
-      if (userData) setUser(userData);
-    } catch {
-      // ละเว้นถ้าดึงไม่สำเร็จ (ยังไม่ล็อกอิน)
+      setUser(userData);
+      return userData;
+    } catch (error) {
+      console.error('Fetch user error:', error);
+      return null;
     }
   };
 
-  const fetchData = async () => {
+  const fetchCategories = async () => {
     try {
-      const data = await apiService.getPromoProducts();
-      setPromoProducts(data);
-    } catch {
-      // ถ้า API ล้มเหลว แสดง empty state แทน crash
+      const data = await apiService.getCategories();
+      if (data && Array.isArray(data)) {
+        setCategories([{ id: 0, name: 'สำหรับคุณ' }, ...data]);
+      }
+    } catch (error) {
+      console.error('Fetch categories error:', error);
+    }
+  };
+
+  const fetchProducts = async (catId) => {
+    try {
+      let data;
+      if (catId === 0) {
+        data = await apiService.getPromoProducts();
+      } else {
+        data = await apiService.getProducts(catId);
+      }
+      setPromoProducts(data || []);
+    } catch (error) {
+      console.error('Fetch products error:', error);
       setPromoProducts([]);
-    } finally {
-      setLoading(false);
+    }
+  };
+
+  const fetchFeedProducts = async () => {
+    try {
+      const data = await apiService.getProducts();
+      setFeedProducts(data || []);
+    } catch (error) {
+      console.error('Fetch feed products error:', error);
+    }
+  };
+
+  const fetchWishlist = async (userId) => {
+    try {
+      const data = await apiService.getWishlist(userId);
+      if (Array.isArray(data)) {
+        setWishlistIds(data.map(item => item.id));
+      }
+    } catch (error) {
+      console.error('Fetch wishlist error:', error);
+    }
+  };
+
+  const handleCategoryPress = (index, catId) => {
+    setActiveCategory(index);
+    fetchProducts(catId);
+  };
+
+  const toggleWishlist = async (productId) => {
+    if (!user) {
+      setInfoModal({ title: 'แจ้งเตือน', message: 'กรุณาเข้าสู่ระบบเพื่อใช้งานสิ่งที่อยากได้' });
+      return;
+    }
+
+    try {
+      const result = await apiService.toggleWishlist(user.id, productId);
+      if (result.status === 'added' || result.status === 'success') {
+        setWishlistIds(prev => [...prev, productId]);
+      } else if (result.status === 'removed') {
+        setWishlistIds(prev => prev.filter(id => id !== productId));
+      }
+    } catch (error) {
+      console.error('Toggle wishlist error:', error);
     }
   };
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await fetchData();
-    await fetchUser();
+    const userData = await fetchUser();
+    await Promise.all([
+      fetchCategories(),
+      fetchProducts(categories[activeCategory]?.id || 0),
+      fetchFeedProducts(),
+      userData ? fetchWishlist(userData.id) : Promise.resolve(),
+    ]);
     setRefreshing(false);
-  }, []);
+  }, [activeCategory, categories]);
 
   const initials = user?.name
     ? user.name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()
@@ -79,7 +154,6 @@ const HomeScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* ── Header ── */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>หน้าหลัก</Text>
         <TouchableOpacity
@@ -95,29 +169,26 @@ const HomeScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      {/* ── Category Tabs ── */}
       <View style={styles.tabBar}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabScrollContent}>
-          {CATEGORIES.map((cat, index) => (
+          {categories.map((cat, index) => (
             <TouchableOpacity
-              key={index}
+              key={cat.id}
               style={[styles.tabItem, activeCategory === index && styles.activeTab]}
-              onPress={() => setActiveCategory(index)}
+              onPress={() => handleCategoryPress(index, cat.id)}
             >
               <Text style={[styles.tabText, activeCategory === index && styles.activeTabText]}>
-                {cat}
+                {cat.name}
               </Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
       </View>
 
-      {/* ── Scrollable Content ── */}
       <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#0D0D0D" />}
       >
-        {/* Banner App Store Style */}
         <View style={styles.bannerContainer}>
           <Image
             source={{ uri: BANNER_URI }}
@@ -138,13 +209,12 @@ const HomeScreen = ({ navigation }) => {
               <Text style={styles.bannerAppName}>SASOM: ซื้อขายสตรีทแวร์</Text>
               <Text style={styles.bannerAppSub}>ในตะกร้าลด 1,200</Text>
             </View>
-            <TouchableOpacity style={styles.bannerBtn}>
+            <TouchableOpacity style={styles.bannerBtn} onPress={() => navigation.navigate('ตะกร้า')}>
               <Ionicons name="cart-outline" size={24} color="#FFF" />
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* Quick Actions (Minimal Scrollable 2-Rows) */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -176,30 +246,37 @@ const HomeScreen = ({ navigation }) => {
 
         <View style={styles.sectionSpacer} />
 
-        {/* Promo Products */}
+        {/* Promo Section */}
         <View style={styles.promoSection}>
           <View style={styles.promoHeader}>
-            <Text style={styles.promoTitle}>มีนา มีการ์ดยัง? ลด 1,200</Text>
-            <TouchableOpacity style={styles.viewAllBtn}>
+            <Text style={styles.promoTitle}>
+              {activeCategory === 0 ? 'มีนา มีการ์ดยัง? ลด 1,200' : categories[activeCategory].name}
+            </Text>
+            <TouchableOpacity style={styles.viewAllBtn} onPress={() => navigation.navigate('ค้นหา')}>
               <Text style={styles.viewAllText}>ดูเพิ่มเติม</Text>
               <Ionicons name="chevron-forward" size={14} color="#AAA" />
             </TouchableOpacity>
           </View>
           <Text style={styles.promoSubTitle}>
-            ช้อป Trading Cards บนแอป SASOM ลดสูงสุด 1,200 | 4-8 มี.ค.
+            {activeCategory === 0 ? 'ช้อป Trading Cards บนแอป SASOM ลดสูงสุด 1,200 | 4-8 มี.ค.' : `เลือกชมสินค้าในหมวด ${categories[activeCategory].name}`}
           </Text>
 
           {loading ? (
             <ActivityIndicator size="large" color="#0D0D0D" style={{ marginVertical: 30 }} />
           ) : promoProducts.length === 0 ? (
             <Text style={{ color: '#AAA', textAlign: 'center', paddingVertical: 20, fontSize: 14 }}>
-              ไม่พบสินค้าโปรโมชั่น
+              ไม่พบสินค้าในหมวดนี้
             </Text>
           ) : (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.productScroll}>
-              {promoProducts.map((item) => (
-                <TouchableOpacity key={item.id} style={styles.productCard} activeOpacity={0.8}>
-                  <Text style={styles.productRank}>{item.rank}</Text>
+              {promoProducts.map((item, index) => (
+                <TouchableOpacity 
+                  key={item.id || index} 
+                  style={styles.productCard} 
+                  activeOpacity={0.8}
+                  onPress={() => navigation.navigate('ProductDetail', { productId: item.id })}
+                >
+                  <Text style={styles.productRank}>{item.rank || index + 1}</Text>
                   <Image source={{ uri: item.image }} style={styles.productImage} />
                 </TouchableOpacity>
               ))}
@@ -207,8 +284,67 @@ const HomeScreen = ({ navigation }) => {
           )}
         </View>
 
+        <View style={styles.sectionSpacer} />
+
+        {/* Feed Grid Section */}
+        <View style={styles.feedSection}>
+          <Text style={styles.feedTitle}>สินค้าแนะนำ</Text>
+          <View style={styles.feedGrid}>
+            {feedProducts.map((item) => {
+              const isWishlisted = wishlistIds.includes(item.id);
+              return (
+                <TouchableOpacity 
+                  key={item.id} 
+                  style={styles.feedCard} 
+                  activeOpacity={0.9}
+                  onPress={() => navigation.navigate('ProductDetail', { productId: item.id })}
+                >
+                  <View style={styles.feedImageContainer}>
+                    <Image source={{ uri: item.image }} style={styles.feedProductImage} />
+                    <View style={styles.feedSoldBadge}>
+                      <Ionicons name="trending-up" size={10} color="#22C55E" />
+                      <Text style={styles.feedSoldText}>{item.sold || '0'} sold</Text>
+                    </View>
+                  </View>
+                  <View style={styles.feedContent}>
+                    <Text style={styles.feedBrand}>{item.brand}</Text>
+                    <Text style={styles.feedName} numberOfLines={2}>{item.name}</Text>
+                    <View style={styles.feedPriceContainer}>
+                      <Text style={styles.feedPriceLabel}>ราคาเริ่มต้น</Text>
+                      <View style={styles.feedPriceRow}>
+                        <Text style={styles.feedPrice}>฿{parseFloat(item.price).toLocaleString()}</Text>
+                        <Ionicons name="flash" size={12} color="#22C55E" style={{ marginLeft: 4 }} />
+                      </View>
+                    </View>
+                  </View>
+                  <TouchableOpacity 
+                    style={styles.feedHeartBtn} 
+                    onPress={() => toggleWishlist(item.id)}
+                  >
+                    <Ionicons 
+                      name={isWishlisted ? "heart" : "heart-outline"} 
+                      size={18} 
+                      color={isWishlisted ? "#EF4444" : "#AAA"} 
+                    />
+                  </TouchableOpacity>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
         <View style={{ height: 110 }} />
       </ScrollView>
+
+      <ConfirmModal
+        visible={!!infoModal}
+        title={infoModal?.title}
+        message={infoModal?.message}
+        confirmText="ตกลง"
+        hideCancel
+        onConfirm={() => setInfoModal(null)}
+        onCancel={() => setInfoModal(null)}
+      />
     </SafeAreaView>
   );
 };

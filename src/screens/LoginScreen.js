@@ -5,7 +5,6 @@ import {
   SafeAreaView,
   TextInput,
   TouchableOpacity,
-  Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
@@ -13,6 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { apiService } from '../api/apiService';
+import ConfirmModal from '../components/ConfirmModal';
 import styles from '../styles/LoginScreen.styles';
 
 // ── Helper ────────────────────────────────────────────────
@@ -25,16 +25,25 @@ const LoginScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [emailFocused, setEmailFocused] = useState(false);
   const [passFocused, setPassFocused] = useState(false);
+  const [modalConfig, setModalConfig] = useState(null);
 
   const passwordRef = useRef(null);
 
+  const showModal = (title, message, onConfirm = null, confirmText = 'ตกลง') => {
+    setModalConfig({ title, message, onConfirm, confirmText });
+  };
+
+  const closeModal = () => {
+    setModalConfig(null);
+  };
+
   const handleLogin = async () => {
     if (!email.trim() || !password) {
-      Alert.alert('แจ้งเตือน', 'กรุณากรอกอีเมลและรหัสผ่าน');
+      showModal('แจ้งเตือน', 'กรุณากรอกอีเมลและรหัสผ่าน');
       return;
     }
     if (!isValidEmail(email.trim())) {
-      Alert.alert('แจ้งเตือน', 'รูปแบบอีเมลไม่ถูกต้อง');
+      showModal('แจ้งเตือน', 'รูปแบบอีเมลไม่ถูกต้อง');
       return;
     }
 
@@ -42,12 +51,23 @@ const LoginScreen = ({ navigation }) => {
     try {
       const response = await apiService.login(email.trim().toLowerCase(), password);
       if (response.status === 'success') {
-        navigation.reset({ index: 0, routes: [{ name: 'หน้าหลัก' }] });
+        navigation.reset({
+          index: 0,
+          routes: [
+            {
+              name: 'MainTabs',
+              state: {
+                index: 0,
+                routes: [{ name: 'หน้าหลัก' }],
+              },
+            },
+          ],
+        });
       } else {
-        Alert.alert('เข้าสู่ระบบไม่สำเร็จ', response.message || 'อีเมลหรือรหัสผ่านไม่ถูกต้อง');
+        showModal('เข้าสู่ระบบไม่สำเร็จ', response.message || 'อีเมลหรือรหัสผ่านไม่ถูกต้อง');
       }
     } catch {
-      Alert.alert('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อกับ Server ได้\nกรุณาตรวจสอบอินเทอร์เน็ต');
+      showModal('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อกับ Server ได้\nกรุณาตรวจสอบอินเทอร์เน็ต');
     } finally {
       setLoading(false);
     }
@@ -126,7 +146,7 @@ const LoginScreen = ({ navigation }) => {
             {/* Forgot Password */}
             <TouchableOpacity
               style={styles.forgotBtn}
-              onPress={() => Alert.alert('ลืมรหัสผ่าน', 'ฟีเจอร์นี้กำลังพัฒนา')}
+              onPress={() => showModal('ลืมรหัสผ่าน', 'ฟีเจอร์นี้กำลังพัฒนา')}
             >
               <Text style={styles.forgotText}>ลืมรหัสผ่าน?</Text>
             </TouchableOpacity>
@@ -154,6 +174,22 @@ const LoginScreen = ({ navigation }) => {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <ConfirmModal
+        visible={!!modalConfig}
+        title={modalConfig?.title}
+        message={modalConfig?.message}
+        confirmText={modalConfig?.confirmText}
+        hideCancel
+        onConfirm={() => {
+          const handler = modalConfig?.onConfirm;
+          closeModal();
+          if (handler) {
+            handler();
+          }
+        }}
+        onCancel={closeModal}
+      />
     </SafeAreaView>
   );
 };

@@ -4,7 +4,7 @@ import { COLORS, FONTS, RADIUS, SPACING } from './theme';
 export default StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.white },
 
-  backBtn: { paddingHorizontal: SPACING.base, paddingTop: SPACING.headerTop + 6, paddingBottom: SPACING.sm },
+  backBtn: { paddingHorizontal: SPACING.base, paddingTop: SPACING.screenHeaderTop, paddingBottom: SPACING.sm },
 
   content: { paddingHorizontal: SPACING.lg, paddingBottom: 100 },
 

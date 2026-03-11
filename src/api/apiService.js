@@ -1,10 +1,9 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// เปลี่ยนเป็น IP เครื่องของคุณ หรือ URL Server จริง
-const BASE_URL = 'http://172.20.10.4/shopping-api/api.php';
+// แยก baseURL ให้เหลือแค่โฟลเดอร์ เพื่อให้การต่อ URL ในแต่ละฟังก์ชันถูกต้อง
+const BASE_URL = 'http://172.20.10.4/shopping-api/';
 
-// Axios instance พร้อม timeout และ headers
 const api = axios.create({
   baseURL: BASE_URL,
   timeout: 10000,
@@ -12,25 +11,63 @@ const api = axios.create({
 });
 
 export const apiService = {
-  // ── Products ──────────────────────────────────────────────
-  getProducts: async () => {
-    const response = await api.get('?action=get_products');
+  // ── Products & Categories ────────────────────────────────
+  getProducts: async (categoryId = null, page = 1) => {
+    const url = categoryId 
+      ? `api.php?action=get_products&category_id=${categoryId}&page=${page}` 
+      : `api.php?action=get_products&page=${page}`;
+    const response = await api.get(url);
+    return response.data;
+  },
+
+  getProduct: async (id) => {
+    const response = await api.get(`api.php?action=get_product&id=${id}`);
+    return response.data;
+  },
+
+  getProductDetail: async (id) => {
+    const response = await api.get(`api.php?action=get_product_detail&id=${id}`);
+    return response.data;
+  },
+
+  getProductImages: async (id) => {
+    const response = await api.get(`api.php?action=get_product_images&id=${id}`);
+    return response.data;
+  },
+
+  getProductVariants: async (id) => {
+    const response = await api.get(`api.php?action=get_product_variants&id=${id}`);
+    return response.data;
+  },
+
+  getReviews: async (id) => {
+    const response = await api.get(`api.php?action=get_reviews&id=${id}`);
+    return response.data;
+  },
+
+  searchProducts: async (query) => {
+    const response = await api.get(`api.php?action=search_products&q=${encodeURIComponent(query)}`);
     return response.data;
   },
 
   getPromoProducts: async () => {
-    const response = await api.get('?action=get_products');
-    return response.data.map((p, i) => ({ ...p, rank: i + 1 }));
+    const response = await api.get('api.php?action=get_products');
+    return response.data.slice(0, 10).map((p, i) => ({ ...p, rank: i + 1 }));
   },
 
-  // ── Auth ──────────────────────────────────────────────────
+  getCategories: async () => {
+    const response = await api.get('api.php?action=get_categories');
+    return response.data;
+  },
+
+  // ── Auth & User ──────────────────────────────────────────
   register: async (userData) => {
-    const response = await api.post('?action=register', userData);
+    const response = await api.post('api.php?action=register', userData);
     return response.data;
   },
 
   login: async (email, password) => {
-    const response = await api.post('?action=login', { email, password });
+    const response = await api.post('api.php?action=login', { email, password });
     if (response.data.status === 'success') {
       await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
     }
@@ -50,27 +87,77 @@ export const apiService = {
     }
   },
 
-  // ── Coupons & Addresses ───────────────────────────────────
-  getCoupons: async () => {
-    try {
-      const response = await api.get('?action=get_coupons');
-      return response.data;
-    } catch {
-      return [];
+  updateProfile: async (userId, profileData) => {
+    const response = await api.post('api.php?action=update_profile', { user_id: userId, ...profileData });
+    if (response.data.status === 'success') {
+      const currentUser = await apiService.getUser();
+      const updatedUser = { ...currentUser, ...profileData };
+      await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
     }
+    return response.data;
+  },
+
+  // ── Wishlist ─────────────────────────────────────────────
+  toggleWishlist: async (userId, productId) => {
+    const response = await api.post('api.php?action=toggle_wishlist', { user_id: userId, product_id: productId });
+    return response.data;
+  },
+
+  getWishlist: async (userId) => {
+    const response = await api.get(`api.php?action=get_wishlist&user_id=${userId}`);
+    return response.data;
+  },
+
+  // ── Cart ─────────────────────────────────────────────────
+  addToCart: async (cartData) => {
+    const response = await api.post('api.php?action=add_to_cart', cartData);
+    return response.data;
+  },
+
+  getCart: async (userId) => {
+    const response = await api.get(`api.php?action=get_cart&user_id=${userId}`);
+    return response.data;
+  },
+
+  removeFromCart: async (userId, cartId) => {
+    const response = await api.post('api.php?action=remove_from_cart', { user_id: userId, id: cartId });
+    return response.data;
+  },
+
+  clearCart: async (userId) => {
+    const response = await api.post('api.php?action=clear_cart', { user_id: userId });
+    return response.data;
+  },
+
+  // ── Coupons & Addresses ──────────────────────────────────
+  getCoupons: async () => {
+    const response = await api.get('api.php?action=get_coupons');
+    return response.data;
   },
 
   getAddresses: async (userId) => {
-    try {
-      const response = await api.get(`?action=get_addresses&user_id=${userId}`);
-      return response.data;
-    } catch {
-      return [];
-    }
+    const response = await api.get(`api.php?action=get_addresses&user_id=${userId}`);
+    return response.data;
   },
 
   saveAddress: async (addressData) => {
-    const response = await api.post('?action=save_address', addressData);
+    const response = await api.post('api.php?action=save_address', addressData);
+    return response.data;
+  },
+
+  deleteAddress: async (userId, addressId) => {
+    const response = await api.post('api.php?action=delete_address', { user_id: userId, id: addressId });
+    return response.data;
+  },
+
+  setDefaultAddress: async (userId, addressId) => {
+    const response = await api.post('api.php?action=set_default_address', { user_id: userId, id: addressId });
+    return response.data;
+  },
+
+  // ── Orders ───────────────────────────────────────────────
+  getOrders: async (userId) => {
+    const response = await api.get(`api.php?action=get_orders&user_id=${userId}`);
     return response.data;
   },
 };

@@ -6,15 +6,15 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  Alert,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { apiService } from '../api/apiService';
+import ConfirmModal from '../components/ConfirmModal';
 import styles from '../styles/UserInfoScreen.styles';
 
-// ── Gender Options ─────────────────────────────────────────
 const GENDERS = ['ชาย', 'หญิง', 'ไม่ระบุ'];
 
 const UserInfoScreen = ({ navigation }) => {
@@ -24,8 +24,16 @@ const UserInfoScreen = ({ navigation }) => {
   const [birthDate, setBirthDate] = useState('');
   const [gender, setGender] = useState('');
   const [nameFocused, setNameFocused] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [modalConfig, setModalConfig] = useState(null);
 
   useEffect(() => { loadUserData(); }, []);
+
+  const showModal = (title, message, onConfirm = null, confirmText = 'ตกลง', hideCancel = true) => {
+    setModalConfig({ title, message, onConfirm, confirmText, hideCancel });
+  };
+
+  const closeModal = () => setModalConfig(null);
 
   const loadUserData = async () => {
     const userData = await apiService.getUser();
@@ -33,40 +41,49 @@ const UserInfoScreen = ({ navigation }) => {
       setUser(userData);
       setName(userData.name || '');
       setEmail(userData.email || '');
-      setBirthDate(userData.birthDate || '');
-      setGender(userData.gender || '');
+      setBirthDate(userData.birth_date || '');
+      setGender(userData.gender || 'ไม่ระบุ');
     }
   };
 
-  const handleUpdate = () => {
+  const handleUpdate = async () => {
     if (!name.trim()) {
-      Alert.alert('แจ้งเตือน', 'กรุณากรอกชื่อของคุณ');
+      showModal('แจ้งเตือน', 'กรุณากรอกชื่อของคุณ');
       return;
     }
-    // TODO: เรียก API อัปเดตข้อมูลจริง
-    Alert.alert('สำเร็จ ✅', 'แก้ไขข้อมูลส่วนตัวเรียบร้อยแล้ว', [
-      { text: 'ตกลง', onPress: () => navigation.goBack() },
-    ]);
+    
+    setLoading(true);
+    try {
+      const result = await apiService.updateProfile(user.id, {
+        name: name.trim(),
+        gender: gender,
+        birth_date: birthDate,
+      });
+
+      if (result.status === 'success') {
+        showModal('สำเร็จ', 'แก้ไขข้อมูลส่วนตัวเรียบร้อยแล้ว', () => navigation.goBack());
+      } else {
+        showModal('ข้อผิดพลาด', result.message || 'ไม่สามารถบันทึกข้อมูลได้');
+      }
+    } catch (error) {
+      showModal('ข้อผิดพลาด', 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDeleteAccount = () => {
-    Alert.alert(
+    showModal(
       'ลบบัญชี',
       'การลบบัญชีจะไม่สามารถกู้คืนได้ คุณแน่ใจหรือไม่?',
-      [
-        { text: 'ยกเลิก', style: 'cancel' },
-        {
-          text: 'ลบบัญชี',
-          style: 'destructive',
-          onPress: () => Alert.alert('แจ้งเตือน', 'ฟีเจอร์นี้กำลังพัฒนา'),
-        },
-      ],
+      () => showModal('แจ้งเตือน', 'ฟีเจอร์นี้กำลังพัฒนา'),
+      'ลบบัญชี',
+      false,
     );
   };
 
   if (!user) return null;
 
-  // แสดงตัวอักษรย่อ
   const initials = name
     ? name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()
     : 'SA';
@@ -77,12 +94,11 @@ const UserInfoScreen = ({ navigation }) => {
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        {/* ── Header ── */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Ionicons name="arrow-back" size={24} color="#0D0D0D" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>โปรไฟล์</Text>
+          <Text style={styles.headerTitle}>ข้อมูลส่วนตัว</Text>
         </View>
 
         <ScrollView
@@ -90,7 +106,6 @@ const UserInfoScreen = ({ navigation }) => {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* ── Avatar ── */}
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>{initials}</Text>
           </View>
@@ -100,9 +115,7 @@ const UserInfoScreen = ({ navigation }) => {
             <Text style={styles.verifiedText}>ยืนยันแล้ว</Text>
           </View>
 
-          {/* ── Form ── */}
           <View style={styles.form}>
-            {/* Name */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>ชื่อ</Text>
               <TextInput
@@ -117,7 +130,6 @@ const UserInfoScreen = ({ navigation }) => {
               />
             </View>
 
-            {/* Email (read-only) */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>อีเมล</Text>
               <View style={[styles.input, styles.disabledInput]}>
@@ -125,22 +137,18 @@ const UserInfoScreen = ({ navigation }) => {
               </View>
             </View>
 
-            {/* Birth Date */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>วันเกิด</Text>
-              <TouchableOpacity
+              <Text style={styles.label}>วันเกิด (YYYY-MM-DD)</Text>
+              <TextInput
                 style={styles.input}
-                onPress={() =>
-                  Alert.alert('วันเกิด', 'Date picker กำลังพัฒนา')
-                }
-              >
-                <Text style={{ color: birthDate ? '#0D0D0D' : '#AAA', fontSize: 16 }}>
-                  {birthDate || 'เลือกวันเกิด'}
-                </Text>
-              </TouchableOpacity>
+                value={birthDate}
+                onChangeText={setBirthDate}
+                placeholder="2000-01-01"
+                placeholderTextColor="#AAA"
+                returnKeyType="done"
+              />
             </View>
 
-            {/* Gender */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>เพศ</Text>
               <View style={{ flexDirection: 'row', gap: 8 }}>
@@ -170,16 +178,35 @@ const UserInfoScreen = ({ navigation }) => {
           </View>
         </ScrollView>
 
-        {/* ── Footer Buttons ── */}
         <View style={styles.footer}>
           <TouchableOpacity style={styles.deleteBtn} onPress={handleDeleteAccount}>
             <Text style={styles.deleteBtnText}>ลบบัญชี</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.saveBtn} onPress={handleUpdate}>
-            <Text style={styles.saveBtnText}>บันทึกการเปลี่ยนแปลง</Text>
+          <TouchableOpacity 
+            style={[styles.saveBtn, loading && { opacity: 0.7 }]} 
+            onPress={handleUpdate}
+            disabled={loading}
+          >
+            {loading ? <ActivityIndicator color="#0D0D0D" /> : <Text style={styles.saveBtnText}>บันทึกการเปลี่ยนแปลง</Text>}
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
+
+      <ConfirmModal
+        visible={!!modalConfig}
+        title={modalConfig?.title}
+        message={modalConfig?.message}
+        confirmText={modalConfig?.confirmText}
+        hideCancel={modalConfig?.hideCancel}
+        onConfirm={() => {
+          const handler = modalConfig?.onConfirm;
+          closeModal();
+          if (handler) {
+            handler();
+          }
+        }}
+        onCancel={closeModal}
+      />
     </SafeAreaView>
   );
 };

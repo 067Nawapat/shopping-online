@@ -5,7 +5,6 @@ import {
   SafeAreaView,
   TextInput,
   TouchableOpacity,
-  Alert,
   ScrollView,
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -13,6 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { apiService } from '../api/apiService';
+import ConfirmModal from '../components/ConfirmModal';
 import styles from '../styles/RegisterScreen.styles';
 
 // ── Helpers ───────────────────────────────────────────────
@@ -40,28 +40,33 @@ const RegisterScreen = ({ navigation }) => {
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
+  const [modalConfig, setModalConfig] = useState(null);
 
   const emailRef = useRef(null);
   const passRef = useRef(null);
   const confirmRef = useRef(null);
+  const showModal = (title, message, onConfirm = null, confirmText = 'ตกลง') => {
+    setModalConfig({ title, message, onConfirm, confirmText });
+  };
+  const closeModal = () => setModalConfig(null);
 
   const strength = getPasswordStrength(password);
 
   const handleRegister = async () => {
     if (!name.trim() || !email.trim() || !password || !confirmPassword) {
-      Alert.alert('ข้อผิดพลาด', 'กรุณากรอกข้อมูลให้ครบทุกช่อง');
+      showModal('ข้อผิดพลาด', 'กรุณากรอกข้อมูลให้ครบทุกช่อง');
       return;
     }
     if (!isValidEmail(email.trim())) {
-      Alert.alert('ข้อผิดพลาด', 'รูปแบบอีเมลไม่ถูกต้อง');
+      showModal('ข้อผิดพลาด', 'รูปแบบอีเมลไม่ถูกต้อง');
       return;
     }
     if (password.length < 6) {
-      Alert.alert('ข้อผิดพลาด', 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร');
+      showModal('ข้อผิดพลาด', 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร');
       return;
     }
     if (password !== confirmPassword) {
-      Alert.alert('ข้อผิดพลาด', 'รหัสผ่านไม่ตรงกัน');
+      showModal('ข้อผิดพลาด', 'รหัสผ่านไม่ตรงกัน');
       return;
     }
 
@@ -73,14 +78,12 @@ const RegisterScreen = ({ navigation }) => {
         password,
       });
       if (response.status === 'success') {
-        Alert.alert('สำเร็จ 🎉', 'สมัครสมาชิกเรียบร้อยแล้ว', [
-          { text: 'เข้าสู่ระบบ', onPress: () => navigation.navigate('Login') },
-        ]);
+        showModal('สำเร็จ', 'สมัครสมาชิกเรียบร้อยแล้ว', () => navigation.navigate('Login'), 'เข้าสู่ระบบ');
       } else {
-        Alert.alert('สมัครไม่สำเร็จ', response.message || 'เกิดข้อผิดพลาดในการสมัคร');
+        showModal('สมัครไม่สำเร็จ', response.message || 'เกิดข้อผิดพลาดในการสมัคร');
       }
     } catch {
-      Alert.alert('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อกับ Server ได้\nกรุณาตรวจสอบอินเทอร์เน็ต');
+      showModal('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อกับ Server ได้\nกรุณาตรวจสอบอินเทอร์เน็ต');
     } finally {
       setLoading(false);
     }
@@ -235,6 +238,22 @@ const RegisterScreen = ({ navigation }) => {
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <ConfirmModal
+        visible={!!modalConfig}
+        title={modalConfig?.title}
+        message={modalConfig?.message}
+        confirmText={modalConfig?.confirmText}
+        hideCancel
+        onConfirm={() => {
+          const handler = modalConfig?.onConfirm;
+          closeModal();
+          if (handler) {
+            handler();
+          }
+        }}
+        onCancel={closeModal}
+      />
     </SafeAreaView>
   );
 };

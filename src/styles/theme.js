@@ -59,6 +59,8 @@ export const SPACING = {
     headerTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 24) : 34,   // ดันลงมาหลบแถบแจ้งเตือน
 };
 
+SPACING.screenHeaderTop = SPACING.headerTop + 20;
+
 export const SHADOW = {
     card: {
         shadowColor: '#000',
