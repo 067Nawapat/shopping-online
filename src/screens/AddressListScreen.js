@@ -75,25 +75,39 @@ const AddressListScreen = ({ navigation }) => {
     setShowDeleteModal(true);
   };
 
+  const formatAddress = (item) => {
+    return [item.address_detail, item.district, item.province].filter(Boolean).join(' ');
+  };
+
   const renderItem = ({ item }) => (
     <View style={styles.addressCard}>
       <View style={styles.addressInfo}>
-        {item.is_default === 1 && (
+        {Number(item.is_default) === 1 && (
           <View style={styles.defaultBadge}>
             <Text style={styles.defaultText}>ค่าเริ่มต้น</Text>
           </View>
         )}
-        <Text style={styles.addressLine}>{item.address_line}</Text>
+        <Text style={styles.recipientName}>{item.full_name || 'ไม่ระบุชื่อผู้รับ'}</Text>
+        {!!item.phone && <Text style={styles.phoneLine}>{item.phone}</Text>}
+        <Text style={styles.addressLine}>{formatAddress(item) || 'ไม่พบรายละเอียดที่อยู่'}</Text>
       </View>
       <View style={styles.actions}>
-        {item.is_default !== 1 && (
+        {Number(item.is_default) !== 1 && (
           <TouchableOpacity onPress={() => handleSetDefault(item.id)} style={styles.actionBtn}>
             <Text style={styles.setDefaultText}>ตั้งเป็นค่าเริ่มต้น</Text>
           </TouchableOpacity>
         )}
-        <TouchableOpacity onPress={() => handleDeletePress(item.id)}>
-          <Ionicons name="trash-outline" size={20} color="#EF4444" />
-        </TouchableOpacity>
+        <View style={styles.actionRight}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('AddAddress', { address: item })}
+            style={styles.editBtn}
+          >
+            <Text style={styles.editText}>แก้ไข</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => handleDeletePress(item.id)}>
+            <Ionicons name="trash-outline" size={20} color="#EF4444" />
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -114,7 +128,7 @@ const AddressListScreen = ({ navigation }) => {
         <ActivityIndicator size="large" color={BLACK} style={{ marginTop: 40 }} />
       ) : addresses.length === 0 ? (
         <View style={styles.emptyContent}>
-          <Ionicons name="location-outline" size={64} color="#DDD" />
+          <Ionicons name="location-outline" size={64} color="#000000" />
           <Text style={styles.title}>ยังไม่มีที่อยู่</Text>
           <Text style={styles.sub}>กรุณาเพิ่มที่อยู่จัดส่งของคุณ</Text>
         </View>
@@ -174,6 +188,8 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   defaultText: { fontSize: 10, fontWeight: '700', color: BLACK },
+  recipientName: { fontSize: 16, color: BLACK, fontWeight: '700', marginBottom: 4 },
+  phoneLine: { fontSize: 14, color: '#444', marginBottom: 6 },
   addressLine: { fontSize: 15, color: BLACK, lineHeight: 22 },
   actions: {
     flexDirection: 'row',
@@ -184,6 +200,13 @@ const styles = StyleSheet.create({
     paddingTop: 12,
   },
   actionBtn: { paddingVertical: 4 },
+  actionRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+  },
+  editBtn: { paddingVertical: 4 },
+  editText: { fontSize: 13, color: BLACK, fontWeight: '600' },
   setDefaultText: { fontSize: 13, color: '#007AFF', fontWeight: '600' },
 });
 

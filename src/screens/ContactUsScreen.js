@@ -29,16 +29,16 @@ const ContactUsScreen = ({ navigation }) => {
           <FontAwesome name="comment" size={24} color="#00B900" />
           <View style={styles.contactInfo}>
             <Text style={styles.contactLabel}>Line Official</Text>
-            <Text style={styles.contactValue}>@sasom_official</Text>
+            <Text style={styles.contactValue}>@shopping_online</Text>
           </View>
           <Ionicons name="chevron-forward" size={16} color="#CCC" />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.contactItem} onPress={() => openLink('mailto:support@sasom.co')}>
+        <TouchableOpacity style={styles.contactItem} onPress={() => openLink('mailto:support@shoppingonline.com')}>
           <Ionicons name="mail" size={24} color="#EA4335" />
           <View style={styles.contactInfo}>
             <Text style={styles.contactLabel}>อีเมล</Text>
-            <Text style={styles.contactValue}>support@sasom.co</Text>
+            <Text style={styles.contactValue}>support@shoppingonline.com</Text>
           </View>
           <Ionicons name="chevron-forward" size={16} color="#CCC" />
         </TouchableOpacity>

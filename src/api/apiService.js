@@ -74,6 +74,38 @@ export const apiService = {
     return response.data;
   },
 
+  googleLogin: (data) => {
+    return fetch(`${BASE_URL}api.php?action=google_login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    })
+      .then(async (res) => {
+        const raw = await res.text();
+        let result = null;
+
+        try {
+          result = raw ? JSON.parse(raw) : null;
+        } catch {
+          throw new Error(raw || 'Google login API ส่งข้อมูลกลับมาไม่ถูกต้อง');
+        }
+
+        if (!res.ok) {
+          throw new Error(result?.message || `Google login API error (${res.status})`);
+        }
+
+        return result;
+      })
+      .then(async (result) => {
+        if (result.status === 'success') {
+          await AsyncStorage.setItem('user', JSON.stringify(result.user || data));
+        }
+        return result;
+      });
+  },
+
   logout: async () => {
     await AsyncStorage.removeItem('user');
   },
@@ -142,6 +174,11 @@ export const apiService = {
 
   saveAddress: async (addressData) => {
     const response = await api.post('api.php?action=save_address', addressData);
+    return response.data;
+  },
+
+  updateAddress: async (addressId, addressData) => {
+    const response = await api.post('api.php?action=update_address', { id: addressId, ...addressData });
     return response.data;
   },
 

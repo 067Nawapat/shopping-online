@@ -339,10 +339,9 @@ const ProductDetailScreen = ({ route, navigation }) => {
 
           <View style={styles.guaranteeBanner}>
             <View style={styles.guaranteeLogo}>
-              <Text style={styles.guaranteeLogoText}>SA</Text>
-              <Text style={styles.guaranteeLogoText}>SOM</Text>
+              <Text style={styles.guaranteeLogoText}>AUTH</Text>
             </View>
-            <Text style={styles.guaranteeText}>SASOM รับประกันของแท้ 100%</Text>
+            <Text style={styles.guaranteeText}>รับประกันของแท้ 100%</Text>
             <Ionicons name="information-circle-outline" size={22} color="#7B7B7B" />
           </View>
         </View>
@@ -519,7 +518,7 @@ const ProductDetailScreen = ({ route, navigation }) => {
             <Text style={styles.promoIconText}>SELL</Text>
           </View>
           <View style={styles.promoContent}>
-            <Text style={styles.promoTitle}>มาเป็นผู้ขายกับ SASOM</Text>
+            <Text style={styles.promoTitle}>เริ่มขายสินค้ากับเรา</Text>
             <Text style={styles.promoText}>ขายสินค้าของแท้ของคุณได้ง่าย ปลอดภัย และรวดเร็ว โดยไม่ต้องมีหน้าร้าน</Text>
           </View>
           <Ionicons name="open-outline" size={26} color="#4E5543" />

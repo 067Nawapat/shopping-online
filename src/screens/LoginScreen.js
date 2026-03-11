@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { apiService } from '../api/apiService';
 import ConfirmModal from '../components/ConfirmModal';
 import styles from '../styles/LoginScreen.styles';
+import { getGoogleSignInErrorMessage, signInWithGoogle } from '../utils/googleSignIn';
 
 // ── Helper ────────────────────────────────────────────────
 const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -23,6 +24,7 @@ const LoginScreen = ({ navigation }) => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [emailFocused, setEmailFocused] = useState(false);
   const [passFocused, setPassFocused] = useState(false);
   const [modalConfig, setModalConfig] = useState(null);
@@ -35,6 +37,24 @@ const LoginScreen = ({ navigation }) => {
 
   const closeModal = () => {
     setModalConfig(null);
+  };
+
+  const googleLogin = async (user) => {
+    try {
+      const res = await apiService.googleLogin({
+        email: user.email,
+        name: user.name,
+        avatar: user.picture,
+      });
+
+      if (res.status === 'success') {
+        navigation.replace('MainTabs');
+      } else {
+        showModal('Google Login', res.message || 'เข้าสู่ระบบด้วย Google ไม่สำเร็จ');
+      }
+    } catch (error) {
+      showModal('Google Login', error.message || 'ไม่สามารถเชื่อมต่อกับ Google login API ได้');
+    }
   };
 
   const handleLogin = async () => {
@@ -73,6 +93,21 @@ const LoginScreen = ({ navigation }) => {
     }
   };
 
+  const handleGoogleLogin = async () => {
+    try {
+      setGoogleLoading(true);
+      const user = await signInWithGoogle();
+      if (!user) {
+        return;
+      }
+      await googleLogin(user);
+    } catch (error) {
+      showModal('Google Login', getGoogleSignInErrorMessage(error));
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
@@ -85,85 +120,109 @@ const LoginScreen = ({ navigation }) => {
           showsVerticalScrollIndicator={false}
         >
           <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back" size={24} color="#0D0D0D" />
+            <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
           </TouchableOpacity>
 
           <View style={styles.content}>
-            <Text style={styles.title}>เข้าสู่ระบบ</Text>
-            <Text style={styles.subtitle}>ยินดีต้อนรับกลับมา</Text>
-
-            {/* Email */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>อีเมล</Text>
-              <View style={[styles.inputWrapper, emailFocused && styles.inputWrapperFocused]}>
-                <TextInput
-                  style={styles.input}
-                  placeholder="example@email.com"
-                  placeholderTextColor="#AAA"
-                  value={email}
-                  onChangeText={setEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  returnKeyType="next"
-                  onFocus={() => setEmailFocused(true)}
-                  onBlur={() => setEmailFocused(false)}
-                  onSubmitEditing={() => passwordRef.current?.focus()}
-                />
-              </View>
+            <View style={styles.kickerRow}>
+              <View style={styles.kickerLine} />
+              <Text style={styles.kickerText}>SIGN IN</Text>
             </View>
 
-            {/* Password */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>รหัสผ่าน</Text>
-              <View style={[styles.inputWrapper, passFocused && styles.inputWrapperFocused]}>
-                <TextInput
-                  ref={passwordRef}
-                  style={styles.input}
-                  placeholder="ระบุรหัสผ่าน"
-                  placeholderTextColor="#AAA"
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry={!showPassword}
-                  returnKeyType="done"
-                  onFocus={() => setPassFocused(true)}
-                  onBlur={() => setPassFocused(false)}
-                  onSubmitEditing={handleLogin}
-                />
-                <TouchableOpacity
-                  style={styles.eyeBtn}
-                  onPress={() => setShowPassword((v) => !v)}
-                >
-                  <Ionicons
-                    name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                    size={20}
-                    color="#888"
+            <Text style={styles.title}>ยินดีต้อนรับกลับมา</Text>
+            <Text style={styles.subtitle}>เข้าสู่ระบบเพื่อเข้าถึงรายการโปรด คำสั่งซื้อ และประสบการณ์ช้อปที่ต่อเนื่อง</Text>
+
+            <View style={styles.panel}>
+
+              {/* Email */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>อีเมล</Text>
+                <View style={[styles.inputWrapper, emailFocused && styles.inputWrapperFocused]}>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="example@email.com"
+                    placeholderTextColor="rgba(255,255,255,0.35)"
+                    value={email}
+                    onChangeText={setEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    returnKeyType="next"
+                    onFocus={() => setEmailFocused(true)}
+                    onBlur={() => setEmailFocused(false)}
+                    onSubmitEditing={() => passwordRef.current?.focus()}
                   />
-                </TouchableOpacity>
+                </View>
               </View>
+
+              {/* Password */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>รหัสผ่าน</Text>
+                <View style={[styles.inputWrapper, passFocused && styles.inputWrapperFocused]}>
+                  <TextInput
+                    ref={passwordRef}
+                    style={styles.input}
+                    placeholder="ระบุรหัสผ่าน"
+                    placeholderTextColor="rgba(255,255,255,0.35)"
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry={!showPassword}
+                    returnKeyType="done"
+                    onFocus={() => setPassFocused(true)}
+                    onBlur={() => setPassFocused(false)}
+                    onSubmitEditing={handleLogin}
+                  />
+                  <TouchableOpacity
+                    style={styles.eyeBtn}
+                    onPress={() => setShowPassword((v) => !v)}
+                  >
+                    <Ionicons
+                      name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                      size={20}
+                      color="rgba(255,255,255,0.55)"
+                    />
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Forgot Password */}
+              <TouchableOpacity
+                style={styles.forgotBtn}
+                onPress={() => showModal('ลืมรหัสผ่าน', 'ฟีเจอร์นี้กำลังพัฒนา')}
+              >
+                <Text style={styles.forgotText}>ลืมรหัสผ่าน?</Text>
+              </TouchableOpacity>
+
+              {/* Login Button */}
+              <TouchableOpacity
+                style={[styles.loginBtn, loading && styles.loginBtnDisabled]}
+                onPress={handleLogin}
+                disabled={loading}
+                activeOpacity={0.85}
+              >
+                {loading ? (
+                  <ActivityIndicator color="#111111" />
+                ) : (
+                  <Text style={styles.loginBtnText}>เข้าสู่ระบบ</Text>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.googleBtn, googleLoading && styles.googleBtnDisabled]}
+                onPress={handleGoogleLogin}
+                disabled={googleLoading}
+                activeOpacity={0.85}
+              >
+                {googleLoading ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <>
+                    <Ionicons name="logo-google" size={18} color="#FFFFFF" />
+                    <Text style={styles.googleBtnText}>Login with Google</Text>
+                  </>
+                )}
+              </TouchableOpacity>
             </View>
-
-            {/* Forgot Password */}
-            <TouchableOpacity
-              style={styles.forgotBtn}
-              onPress={() => showModal('ลืมรหัสผ่าน', 'ฟีเจอร์นี้กำลังพัฒนา')}
-            >
-              <Text style={styles.forgotText}>ลืมรหัสผ่าน?</Text>
-            </TouchableOpacity>
-
-            {/* Login Button */}
-            <TouchableOpacity
-              style={[styles.loginBtn, loading && styles.loginBtnDisabled]}
-              onPress={handleLogin}
-              disabled={loading}
-              activeOpacity={0.85}
-            >
-              {loading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.loginBtnText}>เข้าสู่ระบบ</Text>
-              )}
-            </TouchableOpacity>
 
             <TouchableOpacity onPress={() => navigation.navigate('Register')}>
               <Text style={styles.footerText}>

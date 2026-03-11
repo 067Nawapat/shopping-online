@@ -2,63 +2,111 @@ import { StyleSheet } from 'react-native';
 import { COLORS, FONTS, RADIUS, SPACING, SHADOW } from './theme';
 
 export default StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.bgDark },
+  container: { flex: 1, backgroundColor: '#050505' },
+  hero: {
+    flex: 1,
+    backgroundColor: '#050505',
+  },
 
   content: {
     flex: 1,
     paddingHorizontal: SPACING.lg,
+    paddingTop: SPACING.xxl + 8,
+    paddingBottom: SPACING.xl,
+    justifyContent: 'space-between',
+  },
+  kickerRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 10,
+    marginTop: 4,
+  },
+  kickerLine: {
+    width: 42,
+    height: 2,
+    backgroundColor: COLORS.accent,
+    borderRadius: RADIUS.full,
+  },
+  kickerText: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: FONTS.xs,
+    fontWeight: '800',
+    letterSpacing: 1.6,
   },
 
-  // ── Logo ─────────────────────────────────────────────────
   logoContainer: {
-    marginBottom: SPACING.xxl,
-    alignItems: 'center',
+    marginTop: SPACING.xl,
   },
   logoText: {
-    fontSize: 38,
+    fontSize: 44,
     fontWeight: '900',
-    letterSpacing: 2,
-    lineHeight: 40,
+    letterSpacing: -1.6,
+    lineHeight: 46,
     color: COLORS.white,
   },
-  logoDot: {
-    color: COLORS.accent,
-  },
 
-  // ── Tagline ──────────────────────────────────────────────
   titleContainer: {
-    alignItems: 'flex-start',
-    alignSelf: 'flex-start',
-    marginBottom: SPACING.xxl + 10,
+    marginTop: SPACING.md,
   },
   titleText: {
     fontSize: FONTS.xxl,
-    fontWeight: '300',
+    fontWeight: '800',
     textAlign: 'left',
-    lineHeight: 46,
+    lineHeight: 40,
     color: COLORS.white,
-    letterSpacing: 0.5,
+    letterSpacing: -0.6,
   },
   titleAccent: {
     color: COLORS.accent,
-    fontWeight: '700',
+    fontWeight: '900',
+  },
+  subtitleText: {
+    marginTop: SPACING.md,
+    color: 'rgba(255,255,255,0.72)',
+    fontSize: FONTS.base,
+    lineHeight: 24,
+    maxWidth: '92%',
   },
 
-  // ── Buttons ──────────────────────────────────────────────
-  buttonContainer: { width: '100%', gap: 10 },
+  panel: {
+    width: '100%',
+    padding: SPACING.lg,
+    borderRadius: 28,
+    backgroundColor: 'rgba(255,255,255,0.07)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+    ...SHADOW.strong,
+  },
+  panelHeader: {
+    marginBottom: SPACING.md,
+  },
+  panelEyebrow: {
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: FONTS.xs,
+    fontWeight: '800',
+    letterSpacing: 1.4,
+    marginBottom: 6,
+  },
+  panelTitle: {
+    color: COLORS.white,
+    fontSize: FONTS.lg,
+    fontWeight: '800',
+  },
+  buttonContainer: { width: '100%', gap: 12 },
 
   socialBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
-    borderRadius: RADIUS.md,
-    paddingVertical: 14,
+    borderWidth: 1.2,
+    borderColor: 'rgba(255,255,255,0.18)',
+    borderRadius: 18,
+    paddingVertical: 16,
     width: '100%',
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+  },
+  socialBtnDisabled: {
+    opacity: 0.6,
   },
   socialBtnText: {
     fontSize: FONTS.base,
@@ -68,9 +116,9 @@ export default StyleSheet.create({
   },
 
   emailBtn: {
-    backgroundColor: COLORS.white,
-    borderRadius: RADIUS.md,
-    paddingVertical: 14,
+    backgroundColor: COLORS.accent,
+    borderRadius: 18,
+    paddingVertical: 16,
     alignItems: 'center',
     width: '100%',
   },
@@ -78,19 +126,18 @@ export default StyleSheet.create({
     fontSize: FONTS.base,
     fontWeight: '700',
     color: COLORS.black,
-    letterSpacing: 0.3,
+    letterSpacing: 0.2,
   },
 
-  // ── Login Link ───────────────────────────────────────────
   loginBtn: {
-    marginTop: SPACING.xl,
+    marginTop: SPACING.sm,
     paddingVertical: SPACING.sm,
+    alignItems: 'center',
   },
   loginText: {
     fontSize: FONTS.md,
     fontWeight: '700',
     color: COLORS.white,
-    textDecorationLine: 'underline',
-    textDecorationColor: COLORS.accent,
+    opacity: 0.86,
   },
 });

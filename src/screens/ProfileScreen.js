@@ -10,7 +10,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { apiService } from '../api/apiService';
 import styles from '../styles/ProfileScreen.styles';
-import { StatusItem, MenuItem } from '../components/ProfileComponents';
+import { MenuItem } from '../components/ProfileComponents';
 import ConfirmModal from '../components/ConfirmModal';
 
 const ProfileScreen = ({ navigation }) => {
@@ -77,6 +77,7 @@ const ProfileScreen = ({ navigation }) => {
     verifying: orders.filter(o => o.status === 'verifying').length,
     shipping: orders.filter(o => o.status === 'shipping').length,
     cancelled: orders.filter(o => o.status === 'cancelled').length,
+    completed: orders.filter(o => o.status === 'completed').length,
   };
 
   return (
@@ -102,26 +103,56 @@ const ProfileScreen = ({ navigation }) => {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>การซื้อ</Text>
-            <TouchableOpacity style={styles.viewHistory} onPress={() => {}}>
-              <Text style={styles.historyText}>ดูประวัติ</Text>
-              <Ionicons name="chevron-forward" size={12} color="#CCC" />
+          </View>
+          <View style={styles.purchaseGrid}>
+            <TouchableOpacity style={styles.purchaseItem} activeOpacity={0.8}>
+              <View style={styles.purchaseIconWrap}>
+                <Ionicons name="wallet-outline" size={30} color="#181818" />
+                {orderCounts.pending > 0 ? (
+                  <View style={styles.purchaseBadge}>
+                    <Text style={styles.purchaseBadgeText}>{orderCounts.pending}</Text>
+                  </View>
+                ) : null}
+              </View>
+              <Text style={styles.purchaseLabel}>ที่ต้องชำระ</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.purchaseItem} activeOpacity={0.8}>
+              <View style={styles.purchaseIconWrap}>
+                <Ionicons name="cube-outline" size={30} color="#181818" />
+                {orderCounts.waiting + orderCounts.verifying > 0 ? (
+                  <View style={styles.purchaseBadge}>
+                    <Text style={styles.purchaseBadgeText}>{orderCounts.waiting + orderCounts.verifying}</Text>
+                  </View>
+                ) : null}
+              </View>
+              <Text style={styles.purchaseLabel}>ที่ต้องจัดส่ง</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.purchaseItem} activeOpacity={0.8}>
+              <View style={styles.purchaseIconWrap}>
+                <Ionicons name="car-outline" size={30} color="#181818" />
+                {orderCounts.shipping > 0 ? (
+                  <View style={styles.purchaseBadge}>
+                    <Text style={styles.purchaseBadgeText}>{orderCounts.shipping}</Text>
+                  </View>
+                ) : null}
+              </View>
+              <Text style={styles.purchaseLabel}>ที่ต้องได้รับ</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.purchaseItem} activeOpacity={0.8}>
+              <View style={styles.purchaseIconWrap}>
+                <Ionicons name="star-outline" size={30} color="#181818" />
+                {orderCounts.completed > 0 ? (
+                  <View style={styles.purchaseBadge}>
+                    <Text style={styles.purchaseBadgeText}>{orderCounts.completed}</Text>
+                  </View>
+                ) : null}
+              </View>
+              <Text style={styles.purchaseLabel}>ให้คะแนน</Text>
             </TouchableOpacity>
           </View>
-          <View style={styles.statusGrid}>
-            <StatusItem icon="clipboard-list-outline" label={`กำลังตั้งรับ (${orderCounts.pending})`} />
-            <StatusItem icon="clock-outline" label={`รอเป้าหมาย (${orderCounts.waiting})`} />
-            <StatusItem icon="file-search-outline" label={`ตรวจสอบ (${orderCounts.verifying})`} />
-            <StatusItem icon="truck-delivery-outline" label={`จัดส่ง (${orderCounts.shipping})`} />
-            <StatusItem icon="close-circle-outline" label={`ยกเลิก (${orderCounts.cancelled})`} />
-          </View>
-          <TouchableOpacity style={styles.tierCard}>
-            <Ionicons name="sparkles" size={22} color="#CCFF00" style={styles.tierIcon} />
-            <Text style={styles.tierName}>เทียร์ Explorer</Text>
-            <View style={styles.tierReward}>
-              <Text style={styles.rewardText}>ดูรางวัล</Text>
-              <Ionicons name="chevron-forward" size={12} color="#555" />
-            </View>
-          </TouchableOpacity>
         </View>
 
         {/* ── Account ── */}

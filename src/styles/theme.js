@@ -1,4 +1,4 @@
-// ─── SASOM Design System ─────────────────────────────────────
+// ─── App Design System ───────────────────────────────────────
 // ใช้ไฟล์นี้เป็น Single Source of Truth สำหรับ color, spacing, typography
 import { Platform, StatusBar } from 'react-native';
 
@@ -6,7 +6,7 @@ export const COLORS = {
     // Primary Palette
     black: '#0D0D0D',
     white: '#FFFFFF',
-    accent: '#CCFF00',      // SASOM signature lime-green
+    accent: '#CCFF00',
 
     // Backgrounds
     bg: '#F7F7F7',

@@ -18,13 +18,16 @@ import { SPACING } from '../styles/theme';
 import { THAILAND_DATA } from '../utils/thailandData';
 import ConfirmModal from '../components/ConfirmModal';
 
-const AddAddressScreen = ({ navigation }) => {
-  const [fullName, setFullName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [selectedProvince, setSelectedProvince] = useState(null);
-  const [selectedDistrict, setSelectedDistrict] = useState(null);
-  const [detail, setDetail] = useState('');
-  const [isDefault, setIsDefault] = useState(false);
+const AddAddressScreen = ({ navigation, route }) => {
+  const editingAddress = route.params?.address || null;
+  const isEditing = !!editingAddress;
+
+  const [fullName, setFullName] = useState(editingAddress?.full_name || '');
+  const [phone, setPhone] = useState(editingAddress?.phone || '');
+  const [selectedProvince, setSelectedProvince] = useState(editingAddress?.province || null);
+  const [selectedDistrict, setSelectedDistrict] = useState(editingAddress?.district || null);
+  const [detail, setDetail] = useState(editingAddress?.address_detail || '');
+  const [isDefault, setIsDefault] = useState(Number(editingAddress?.is_default) === 1);
   const [loading, setLoading] = useState(false);
 
   const [modalVisible, setModalVisible] = useState(false);
@@ -54,7 +57,7 @@ const AddAddressScreen = ({ navigation }) => {
       const user = await apiService.getUser();
       if (!user) return;
 
-      const result = await apiService.saveAddress({
+      const payload = {
         user_id: user.id,
         full_name: fullName.trim(),
         phone: phone.trim(),
@@ -62,12 +65,20 @@ const AddAddressScreen = ({ navigation }) => {
         district: selectedDistrict,
         address_detail: detail.trim(),
         is_default: isDefault ? 1 : 0,
-      });
+      };
+
+      const result = isEditing
+        ? await apiService.updateAddress(editingAddress.id, payload)
+        : await apiService.saveAddress(payload);
 
       if (result.status === 'success') {
-        showModal('สำเร็จ', 'บันทึกที่อยู่เรียบร้อยแล้ว', () => navigation.goBack());
+        showModal(
+          'สำเร็จ',
+          isEditing ? 'อัปเดตที่อยู่เรียบร้อยแล้ว' : 'บันทึกที่อยู่เรียบร้อยแล้ว',
+          () => navigation.goBack()
+        );
       } else {
-        showModal('ข้อผิดพลาด', 'ไม่สามารถบันทึกที่อยู่ได้');
+        showModal('ข้อผิดพลาด', isEditing ? 'ไม่สามารถอัปเดตที่อยู่ได้' : 'ไม่สามารถบันทึกที่อยู่ได้');
       }
     } catch (error) {
       showModal('ข้อผิดพลาด', 'เกิดข้อผิดพลาดในการเชื่อมต่อ');
@@ -101,7 +112,7 @@ const AddAddressScreen = ({ navigation }) => {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color={BLACK} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>เพิ่มที่อยู่ใหม่</Text>
+        <Text style={styles.headerTitle}>{isEditing ? 'แก้ไขที่อยู่' : 'เพิ่มที่อยู่ใหม่'}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -185,7 +196,7 @@ const AddAddressScreen = ({ navigation }) => {
           {loading ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.saveBtnText}>บันทึกที่อยู่</Text>
+            <Text style={styles.saveBtnText}>{isEditing ? 'บันทึกการแก้ไข' : 'บันทึกที่อยู่'}</Text>
           )}
         </TouchableOpacity>
       </View>

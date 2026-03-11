@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -101,7 +101,7 @@ const RegisterScreen = ({ navigation }) => {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="#0D0D0D" />
+          <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
         </TouchableOpacity>
 
         <ScrollView
@@ -109,127 +109,135 @@ const RegisterScreen = ({ navigation }) => {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.title}>สมัครสมาชิก</Text>
-          <Text style={styles.subtitle}>สร้างบัญชีใหม่ของคุณ</Text>
-
-          {/* Name */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>ชื่อ-นามสกุล</Text>
-            <View style={inputWrapper('name')}>
-              <TextInput
-                style={styles.input}
-                placeholder="ชื่อของคุณ"
-                placeholderTextColor="#AAA"
-                value={name}
-                onChangeText={setName}
-                returnKeyType="next"
-                onFocus={() => setFocusedField('name')}
-                onBlur={() => setFocusedField(null)}
-                onSubmitEditing={() => emailRef.current?.focus()}
-              />
-            </View>
+          <View style={styles.kickerRow}>
+            <View style={styles.kickerLine} />
+            <Text style={styles.kickerText}>CREATE ACCOUNT</Text>
           </View>
 
-          {/* Email */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>อีเมล</Text>
-            <View style={inputWrapper('email')}>
-              <TextInput
-                ref={emailRef}
-                style={styles.input}
-                placeholder="example@email.com"
-                placeholderTextColor="#AAA"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                returnKeyType="next"
-                onFocus={() => setFocusedField('email')}
-                onBlur={() => setFocusedField(null)}
-                onSubmitEditing={() => passRef.current?.focus()}
-              />
-            </View>
-          </View>
+          <Text style={styles.title}>สร้างบัญชีใหม่</Text>
+          <Text style={styles.subtitle}>สมัครด้วยอีเมลเพื่อบันทึกรายการโปรด ติดตามคำสั่งซื้อ และเริ่มต้นใช้งานได้ทันที</Text>
 
-          {/* Password */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>รหัสผ่าน</Text>
-            <View style={inputWrapper('pass')}>
-              <TextInput
-                ref={passRef}
-                style={styles.input}
-                placeholder="อย่างน้อย 6 ตัวอักษร"
-                placeholderTextColor="#AAA"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPass}
-                returnKeyType="next"
-                onFocus={() => setFocusedField('pass')}
-                onBlur={() => setFocusedField(null)}
-                onSubmitEditing={() => confirmRef.current?.focus()}
-              />
-              <TouchableOpacity style={styles.eyeBtn} onPress={() => setShowPass((v) => !v)}>
-                <Ionicons name={showPass ? 'eye-off-outline' : 'eye-outline'} size={20} color="#888" />
-              </TouchableOpacity>
-            </View>
-            {/* Password Strength */}
-            {password.length > 0 && (
-              <>
-                <View style={styles.strengthBar}>
-                  {[1, 2, 3].map((level) => (
-                    <View
-                      key={level}
-                      style={[
-                        styles.strengthSegment,
-                        strength >= level && { backgroundColor: STRENGTH_COLORS[strength] },
-                      ]}
-                    />
-                  ))}
-                </View>
-                <Text style={[styles.strengthLabel, { color: STRENGTH_COLORS[strength] }]}>
-                  {STRENGTH_LABELS[strength]}
-                </Text>
-              </>
-            )}
-          </View>
+          <View style={styles.panel}>
 
-          {/* Confirm Password */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>ยืนยันรหัสผ่าน</Text>
-            <View style={inputWrapper('confirm')}>
-              <TextInput
-                ref={confirmRef}
-                style={styles.input}
-                placeholder="ระบุรหัสผ่านอีกครั้ง"
-                placeholderTextColor="#AAA"
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                secureTextEntry={!showConfirm}
-                returnKeyType="done"
-                onFocus={() => setFocusedField('confirm')}
-                onBlur={() => setFocusedField(null)}
-                onSubmitEditing={handleRegister}
-              />
-              <TouchableOpacity style={styles.eyeBtn} onPress={() => setShowConfirm((v) => !v)}>
-                <Ionicons name={showConfirm ? 'eye-off-outline' : 'eye-outline'} size={20} color="#888" />
-              </TouchableOpacity>
+            {/* Name */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>ชื่อ-นามสกุล</Text>
+              <View style={inputWrapper('name')}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="ชื่อของคุณ"
+                  placeholderTextColor="rgba(255,255,255,0.35)"
+                  value={name}
+                  onChangeText={setName}
+                  returnKeyType="next"
+                  onFocus={() => setFocusedField('name')}
+                  onBlur={() => setFocusedField(null)}
+                  onSubmitEditing={() => emailRef.current?.focus()}
+                />
+              </View>
             </View>
-          </View>
 
-          {/* Register Button */}
-          <TouchableOpacity
-            style={[styles.registerBtn, loading && styles.registerBtnDisabled]}
-            onPress={handleRegister}
-            disabled={loading}
-            activeOpacity={0.85}
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.registerBtnText}>สมัครสมาชิก</Text>
-            )}
-          </TouchableOpacity>
+            {/* Email */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>อีเมล</Text>
+              <View style={inputWrapper('email')}>
+                <TextInput
+                  ref={emailRef}
+                  style={styles.input}
+                  placeholder="example@email.com"
+                  placeholderTextColor="rgba(255,255,255,0.35)"
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  returnKeyType="next"
+                  onFocus={() => setFocusedField('email')}
+                  onBlur={() => setFocusedField(null)}
+                  onSubmitEditing={() => passRef.current?.focus()}
+                />
+              </View>
+            </View>
+
+            {/* Password */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>รหัสผ่าน</Text>
+              <View style={inputWrapper('pass')}>
+                <TextInput
+                  ref={passRef}
+                  style={styles.input}
+                  placeholder="อย่างน้อย 6 ตัวอักษร"
+                  placeholderTextColor="rgba(255,255,255,0.35)"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!showPass}
+                  returnKeyType="next"
+                  onFocus={() => setFocusedField('pass')}
+                  onBlur={() => setFocusedField(null)}
+                  onSubmitEditing={() => confirmRef.current?.focus()}
+                />
+                <TouchableOpacity style={styles.eyeBtn} onPress={() => setShowPass((v) => !v)}>
+                  <Ionicons name={showPass ? 'eye-off-outline' : 'eye-outline'} size={20} color="rgba(255,255,255,0.55)" />
+                </TouchableOpacity>
+              </View>
+              {/* Password Strength */}
+              {password.length > 0 && (
+                <>
+                  <View style={styles.strengthBar}>
+                    {[1, 2, 3].map((level) => (
+                      <View
+                        key={level}
+                        style={[
+                          styles.strengthSegment,
+                          strength >= level && { backgroundColor: STRENGTH_COLORS[strength] },
+                        ]}
+                      />
+                    ))}
+                  </View>
+                  <Text style={[styles.strengthLabel, { color: STRENGTH_COLORS[strength] }]}>
+                    {STRENGTH_LABELS[strength]}
+                  </Text>
+                </>
+              )}
+            </View>
+
+            {/* Confirm Password */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>ยืนยันรหัสผ่าน</Text>
+              <View style={inputWrapper('confirm')}>
+                <TextInput
+                  ref={confirmRef}
+                  style={styles.input}
+                  placeholder="ระบุรหัสผ่านอีกครั้ง"
+                  placeholderTextColor="rgba(255,255,255,0.35)"
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  secureTextEntry={!showConfirm}
+                  returnKeyType="done"
+                  onFocus={() => setFocusedField('confirm')}
+                  onBlur={() => setFocusedField(null)}
+                  onSubmitEditing={handleRegister}
+                />
+                <TouchableOpacity style={styles.eyeBtn} onPress={() => setShowConfirm((v) => !v)}>
+                  <Ionicons name={showConfirm ? 'eye-off-outline' : 'eye-outline'} size={20} color="rgba(255,255,255,0.55)" />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Register Button */}
+            <TouchableOpacity
+              style={[styles.registerBtn, loading && styles.registerBtnDisabled]}
+              onPress={handleRegister}
+              disabled={loading}
+              activeOpacity={0.85}
+            >
+              {loading ? (
+                <ActivityIndicator color="#111111" />
+              ) : (
+                <Text style={styles.registerBtnText}>สมัครสมาชิก</Text>
+              )}
+            </TouchableOpacity>
+          </View>
 
           <TouchableOpacity onPress={() => navigation.navigate('Login')}>
             <Text style={styles.footerText}>
