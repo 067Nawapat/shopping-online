@@ -212,4 +212,26 @@ export const apiService = {
     const response = await api.get(`api.php?action=get_orders&user_id=${userId}`);
     return response.data;
   },
+
+  createOrder: async (orderData) => {
+    const response = await api.post('api.php?action=create_order', orderData);
+    return response.data;
+  },
+
+  uploadSlip: async (orderId, imageUri) => {
+    const formData = new FormData();
+    formData.append('order_id', orderId);
+    formData.append('slip', {
+      uri: imageUri,
+      type: 'image/jpeg',
+      name: `slip_${Date.now()}.jpg`,
+    });
+
+    const response = await axios.post(`${BASE_URL}api.php?action=upload_slip`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
 };

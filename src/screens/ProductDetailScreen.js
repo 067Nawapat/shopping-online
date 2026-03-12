@@ -152,7 +152,7 @@ const ProductDetailScreen = ({ route, navigation }) => {
       } catch (error) { console.error(error); }
     } else {
       setSizeModalVisible(false);
-      navigation.navigate("PaymentMethods", { product, variant: selectedVariant });
+      navigation.navigate("Checkout", { buyNowProduct: product, buyNowVariant: selectedVariant });
     }
   };
 
@@ -251,7 +251,7 @@ const ProductDetailScreen = ({ route, navigation }) => {
             <Ionicons name={reviewExpanded ? 'chevron-up' : 'chevron-down'} size={24} color="#111" />
           </TouchableOpacity>
           {reviewExpanded && (
-            <View style={styles.sectionInner}>
+            <View style={sectionInnerStyle}>
               <View style={styles.reviewScoreCard}>
                 <View><Text style={styles.reviewScoreValue}>{ratingValue.toFixed(1)}</Text><Text style={styles.reviewScoreLabel}>จาก 5</Text></View>
                 <View style={styles.reviewScoreRight}>
@@ -260,11 +260,10 @@ const ProductDetailScreen = ({ route, navigation }) => {
                 </View>
               </View>
 
-              {/* ส่วนแสดงหลอดคะแนนดาว */}
               <View style={styles.fitSection}>
                 {ratingDistribution.map(item => (
                   <View key={item.star} style={styles.fitRow}>
-                    <View style={[styles.fitLabel, { flexDirection: 'row', alignItems: 'center', width: 85 }]}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', width: 85 }}>
                       {[1, 2, 3, 4, 5].map((s) => (
                         <Ionicons 
                           key={s} 
@@ -382,6 +381,11 @@ const ProductDetailScreen = ({ route, navigation }) => {
       <ConfirmModal visible={!!modalConfig} title={modalConfig?.title} message={modalConfig?.message} confirmText="ตกลง" hideCancel onConfirm={() => setModalConfig(null)} />
     </SafeAreaView>
   );
+};
+
+const sectionInnerStyle = {
+    padding: 20,
+    backgroundColor: '#fff',
 };
 
 export default ProductDetailScreen;

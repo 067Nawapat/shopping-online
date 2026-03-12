@@ -1,13 +1,14 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, SafeAreaView, StyleSheet, FlatList, Image, TouchableOpacity, ActivityIndicator, DeviceEventEmitter } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { apiService } from '../api/apiService';
 import { BLACK, MUTED } from '../utils/constants';
 import { SPACING } from '../styles/theme';
 import ConfirmModal from '../components/ConfirmModal';
 
 const CartScreen = () => {
+  const navigation = useNavigation();
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
@@ -75,6 +76,15 @@ const CartScreen = () => {
   const totalItems = cartItems.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
   const totalPrice = cartItems.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0);
 
+  const handleCheckout = () => {
+    if (!user) {
+      navigation.navigate('Auth');
+      return;
+    }
+    if (cartItems.length === 0) return;
+    navigation.navigate('Checkout', { items: cartItems });
+  };
+
   const renderItem = ({ item }) => (
     <View style={styles.cartItem}>
       <Image source={{ uri: item.image }} style={styles.itemImage} />
@@ -131,7 +141,7 @@ const CartScreen = () => {
               <Text style={styles.totalLabel}>รวมทั้งสิ้น ({totalItems} ชิ้น)</Text>
               <Text style={styles.totalValue}>฿{totalPrice.toLocaleString()}</Text>
             </View>
-            <TouchableOpacity style={styles.checkoutBtn} onPress={() => setInfoModal({ title: 'Payment', message: 'ระบบชำระเงินกำลังพัฒนา' })}>
+            <TouchableOpacity style={styles.checkoutBtn} onPress={handleCheckout}>
               <Text style={styles.checkoutText}>ดำเนินการชำระเงิน</Text>
             </TouchableOpacity>
           </View>

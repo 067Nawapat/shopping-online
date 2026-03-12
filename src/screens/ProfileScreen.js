@@ -105,7 +105,11 @@ const ProfileScreen = ({ navigation }) => {
             <Text style={styles.sectionTitle}>การซื้อ</Text>
           </View>
           <View style={styles.purchaseGrid}>
-            <TouchableOpacity style={styles.purchaseItem} activeOpacity={0.8}>
+            <TouchableOpacity 
+              style={styles.purchaseItem} 
+              activeOpacity={0.8}
+              onPress={() => navigation.navigate('PendingPayments')}
+            >
               <View style={styles.purchaseIconWrap}>
                 <Ionicons name="wallet-outline" size={30} color="#181818" />
                 {orderCounts.pending > 0 ? (
@@ -126,7 +130,7 @@ const ProfileScreen = ({ navigation }) => {
                   </View>
                 ) : null}
               </View>
-              <Text style={styles.purchaseLabel}>ที่ต้องจัดส่ง</Text>
+              <Text style={styles.purchaseLabel}>รอการจัดส่ง</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.purchaseItem} activeOpacity={0.8}>
