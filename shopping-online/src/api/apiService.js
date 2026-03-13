@@ -1,8 +1,9 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { APP_CONFIG } from '../config/appConfig';
 
 // แยก baseURL ให้เหลือแค่โฟลเดอร์ เพื่อให้การต่อ URL ในแต่ละฟังก์ชันถูกต้อง
-const BASE_URL = 'http://192.168.1.40/shopping-api/';
+const BASE_URL = APP_CONFIG.API_BASE_URL;
 
 const api = axios.create({
   baseURL: BASE_URL,

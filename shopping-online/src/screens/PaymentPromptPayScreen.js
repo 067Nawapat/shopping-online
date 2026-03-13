@@ -14,10 +14,11 @@ import * as FileSystem from 'expo-file-system/legacy';
 import * as ImagePicker from 'expo-image-picker';
 import * as MediaLibrary from 'expo-media-library';
 import { apiService } from '../api/apiService';
+import { APP_CONFIG } from '../config/appConfig';
 import styles from '../styles/PaymentPromptPayScreen.styles';
 
-const PROMPTPAY_NUMBER = '0926631047';
-const TRUE_MONEY_NUMBER = '0926631047';
+const PROMPTPAY_NUMBER = APP_CONFIG.PROMPTPAY_NUMBER;
+const TRUE_MONEY_NUMBER = APP_CONFIG.TRUE_MONEY_NUMBER;
 
 const METHOD_META = {
   promptpay: {

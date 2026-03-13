@@ -96,11 +96,37 @@ function extract_promptpay_details($qrPayload) {
 }
 
 function get_promptpay_target() {
-    return '0926631047';
+    $value = trim((string)(getenv('PROMPTPAY_NUMBER') ?: ''));
+    if ($value !== '') {
+        return $value;
+    }
+
+    $localConfigPath = __DIR__ . '/local-config.php';
+    if (is_file($localConfigPath)) {
+        $config = require $localConfigPath;
+        if (is_array($config) && !empty($config['PROMPTPAY_NUMBER'])) {
+            return trim((string)$config['PROMPTPAY_NUMBER']);
+        }
+    }
+
+    return '';
 }
 
 function get_truemoney_target() {
-    return '0926631047';
+    $value = trim((string)(getenv('TRUE_MONEY_NUMBER') ?: ''));
+    if ($value !== '') {
+        return $value;
+    }
+
+    $localConfigPath = __DIR__ . '/local-config.php';
+    if (is_file($localConfigPath)) {
+        $config = require $localConfigPath;
+        if (is_array($config) && !empty($config['TRUE_MONEY_NUMBER'])) {
+            return trim((string)$config['TRUE_MONEY_NUMBER']);
+        }
+    }
+
+    return '';
 }
 
 function payment_method_label($paymentMethod) {
