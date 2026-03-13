@@ -218,29 +218,25 @@ export const apiService = {
     return response.data;
   },
 
-  uploadSlip: async (orderId, imageUri, verificationData = {}) => {
-    const formData = new FormData();
-    formData.append('order_id', orderId);
-    formData.append('slip', {
-      uri: imageUri,
-      type: 'image/jpeg',
-      name: `slip_${Date.now()}.jpg`,
+  generatePaymentQr: async (amount) => {
+    const response = await api.post('api.php?action=generate_payment_qr', {
+      amount,
     });
-    if (verificationData.detectedAmount != null) {
-      formData.append('detected_amount', String(verificationData.detectedAmount));
-    }
-    if (verificationData.detectedPromptPay) {
-      formData.append('detected_promptpay', String(verificationData.detectedPromptPay));
-    }
-    if (verificationData.detectedAccountName) {
-      formData.append('detected_account_name', String(verificationData.detectedAccountName));
-    }
+    return response.data;
+  },
 
-    const response = await axios.post(`${BASE_URL}api.php?action=upload_slip`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
+  uploadSlip: async (orderId, slipAsset) => {
+    const imageBase64 = slipAsset?.base64 || '';
+    const fileName = slipAsset?.fileName || `slip_${Date.now()}.jpg`;
+    const mimeType = slipAsset?.mimeType || slipAsset?.type || 'image/jpeg';
+
+    const response = await api.post('api.php?action=upload_slip', {
+      order_id: orderId,
+      slip_base64: imageBase64,
+      slip_name: fileName,
+      slip_type: mimeType,
     });
+
     return response.data;
   },
 };

@@ -40,3 +40,9 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# local backend runtime files
+/shopping-api/uploads/
+
+# local editor and temp files
+*.log

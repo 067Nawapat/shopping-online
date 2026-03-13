@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -15,34 +15,55 @@ import { Ionicons } from '@expo/vector-icons';
 import { apiService } from '../api/apiService';
 import styles from '../styles/CheckoutScreen.styles';
 
+const PAYMENT_METHODS = [
+  {
+    id: 'promptpay',
+    title: 'QR PromptPay',
+    subtitle: 'สแกนจ่ายและอัปโหลดสลิปเพื่อตรวจสอบอัตโนมัติ',
+    icon: 'qr-code-outline',
+    accent: '#003D87',
+  },
+  {
+    id: 'true_money',
+    title: 'TrueMoney Wallet',
+    subtitle: 'โอนเข้าวอลเล็ทแล้วอัปโหลดสลิปเพื่อตรวจสอบกับ EasySlip',
+    icon: 'phone-portrait-outline',
+    accent: '#F97316',
+  },
+];
+
 const CheckoutScreen = ({ route, navigation }) => {
   const { items, buyNowProduct, buyNowVariant } = route.params || {};
-  
+
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
   const [addresses, setAddresses] = useState([]);
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [coupons, setCoupons] = useState([]);
   const [selectedCoupon, setSelectedCoupon] = useState(null);
-  
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(PAYMENT_METHODS[0]);
+
   const [addressModalVisible, setAddressModalVisible] = useState(false);
   const [couponModalVisible, setCouponModalVisible] = useState(false);
+  const [paymentModalVisible, setPaymentModalVisible] = useState(false);
   const [processing, setProcessing] = useState(false);
 
-  // Determine items to display
   const checkoutItems = useMemo(() => {
     if (buyNowProduct && buyNowVariant) {
-      return [{
-        id: buyNowProduct.id,
-        variant_id: buyNowVariant.id,
-        name: buyNowProduct.name,
-        brand: buyNowProduct.brand,
-        image: buyNowProduct.image,
-        size: buyNowVariant.size,
-        price: buyNowVariant.price,
-        quantity: 1,
-      }];
+      return [
+        {
+          id: buyNowProduct.id,
+          variant_id: buyNowVariant.id,
+          name: buyNowProduct.name,
+          brand: buyNowProduct.brand,
+          image: buyNowProduct.image,
+          size: buyNowVariant.size,
+          price: buyNowVariant.price,
+          quantity: 1,
+        },
+      ];
     }
+
     return items || [];
   }, [items, buyNowProduct, buyNowVariant]);
 
@@ -58,18 +79,16 @@ const CheckoutScreen = ({ route, navigation }) => {
         navigation.navigate('Auth');
         return;
       }
+
       setUser(userData);
 
-      // Fetch Addresses
       const addrData = await apiService.getAddresses(userData.id);
       setAddresses(addrData || []);
-      const defaultAddr = addrData?.find(a => Number(a.is_default) === 1) || addrData?.[0];
+      const defaultAddr = addrData?.find((item) => Number(item.is_default) === 1) || addrData?.[0] || null;
       setSelectedAddress(defaultAddr);
 
-      // Fetch Coupons
       const couponData = await apiService.getUserCoupons(userData.id);
       setCoupons(couponData || []);
-
     } catch (error) {
       console.error('Checkout load error:', error);
     } finally {
@@ -77,18 +96,24 @@ const CheckoutScreen = ({ route, navigation }) => {
     }
   };
 
-  const subtotal = useMemo(() => {
-    return checkoutItems.reduce((sum, item) => sum + (parseFloat(item.price) * (item.quantity || 1)), 0);
-  }, [checkoutItems]);
+  const subtotal = useMemo(() => (
+    checkoutItems.reduce(
+      (sum, item) => sum + parseFloat(item.price || 0) * (item.quantity || 1),
+      0
+    )
+  ), [checkoutItems]);
 
   const shippingFee = 0;
   const serviceFee = 0;
 
   const discountAmount = useMemo(() => {
-    if (!selectedCoupon) return 0;
+    if (!selectedCoupon) {
+      return 0;
+    }
+
     const discountVal = parseFloat(selectedCoupon.discount) || 0;
     const maxDiscount = parseFloat(selectedCoupon.max_discount) || 0;
-    
+
     let calculatedDiscount = 0;
     if (discountVal <= 100) {
       calculatedDiscount = (subtotal * discountVal) / 100;
@@ -98,7 +123,7 @@ const CheckoutScreen = ({ route, navigation }) => {
     } else {
       calculatedDiscount = discountVal;
     }
-    
+
     return calculatedDiscount;
   }, [selectedCoupon, subtotal]);
 
@@ -117,41 +142,114 @@ const CheckoutScreen = ({ route, navigation }) => {
         total_price: total,
         address_id: selectedAddress.id,
         coupon_id: selectedCoupon?.id || null,
-        items: checkoutItems
+        payment_method: selectedPaymentMethod.id,
+        items: checkoutItems,
       });
 
-      if (orderRes.status === 'success') {
-        setProcessing(false);
-        navigation.navigate('PaymentPromptPay', { 
-          orderId: orderRes.order_id, 
-          totalPrice: total 
-        });
-      } else {
-        setProcessing(false);
-        Alert.alert('ผิดพลาด', 'ไม่สามารถสร้างคำสั่งซื้อได้');
+      if (orderRes.status !== 'success') {
+        throw new Error(orderRes.message || 'ไม่สามารถสร้างคำสั่งซื้อได้');
       }
+
+      setProcessing(false);
+      navigation.navigate('PaymentPromptPay', {
+        orderId: orderRes.order_id,
+        totalPrice: total,
+        paymentMethod: selectedPaymentMethod.id,
+      });
     } catch (error) {
       setProcessing(false);
-      console.error(error);
-      Alert.alert('ผิดพลาด', 'เกิดข้อผิดพลาดในการเชื่อมต่อ');
+      console.error('Checkout create order error:', error);
+      Alert.alert('ผิดพลาด', error?.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อ');
     }
   };
 
   const renderProductItem = (item) => (
-    <View key={item.id + (item.variant_id || '')} style={styles.productItem}>
+    <View key={`${item.id}_${item.variant_id || 'base'}`} style={styles.productItem}>
       <Image source={{ uri: item.image }} style={styles.productImage} />
       <View style={styles.productInfo}>
         <Text style={styles.productName} numberOfLines={2}>{item.name}</Text>
-        <Text style={styles.productVariant}>{item.brand} • ไซส์ {item.size}</Text>
-        <Text style={styles.productPrice}>฿{parseFloat(item.price).toLocaleString()}</Text>
+        <Text style={styles.productVariant}>
+          {item.brand} • ไซส์ {item.size}
+        </Text>
+        <Text style={styles.productPrice}>฿{parseFloat(item.price || 0).toLocaleString()}</Text>
         <Text style={styles.productQty}>x{item.quantity || 1}</Text>
       </View>
     </View>
   );
 
+  const renderAddressOption = ({ item }) => (
+    <TouchableOpacity
+      style={[
+        styles.addressOption,
+        selectedAddress?.id === item.id && styles.selectedAddressOption,
+      ]}
+      onPress={() => {
+        setSelectedAddress(item);
+        setAddressModalVisible(false);
+      }}
+    >
+      <Text style={styles.addressName}>{item.full_name} ({item.phone})</Text>
+      <Text style={styles.addressText}>
+        {item.address_detail} {item.district} {item.province} {item.zipcode}
+      </Text>
+    </TouchableOpacity>
+  );
+
+  const renderCouponOption = ({ item }) => {
+    const isSelected = selectedCoupon?.id === item.id;
+    const label = parseFloat(item.discount || 0) <= 100
+      ? `ลด ${item.discount}%`
+      : `ลด ฿${parseFloat(item.discount || 0).toLocaleString()}`;
+
+    return (
+      <TouchableOpacity
+        style={[
+          styles.couponOption,
+          isSelected && styles.selectedCouponOption,
+        ]}
+        onPress={() => {
+          setSelectedCoupon(item);
+          setCouponModalVisible(false);
+        }}
+      >
+        <Ionicons name="ticket-outline" size={20} color={isSelected ? '#22C55E' : '#666'} />
+        <View style={styles.couponOptionBody}>
+          <Text style={styles.couponOptionTitle}>{item.code}</Text>
+          <Text style={styles.couponOptionSub}>{label}</Text>
+        </View>
+        {isSelected ? <Ionicons name="checkmark-circle" size={20} color="#22C55E" /> : null}
+      </TouchableOpacity>
+    );
+  };
+
+  const renderPaymentMethodOption = ({ item }) => {
+    const isSelected = selectedPaymentMethod.id === item.id;
+    return (
+      <TouchableOpacity
+        style={[
+          styles.paymentMethodOption,
+          isSelected && styles.selectedPaymentMethodOption,
+        ]}
+        onPress={() => {
+          setSelectedPaymentMethod(item);
+          setPaymentModalVisible(false);
+        }}
+      >
+        <View style={[styles.paymentMethodIcon, { backgroundColor: `${item.accent}14` }]}>
+          <Ionicons name={item.icon} size={20} color={item.accent} />
+        </View>
+        <View style={styles.paymentMethodBody}>
+          <Text style={styles.paymentMethodTitle}>{item.title}</Text>
+          <Text style={styles.paymentMethodSub}>{item.subtitle}</Text>
+        </View>
+        {isSelected ? <Ionicons name="checkmark-circle" size={22} color={item.accent} /> : null}
+      </TouchableOpacity>
+    );
+  };
+
   if (loading) {
     return (
-      <SafeAreaView style={[styles.container, { justifyContent: 'center' }]}>
+      <SafeAreaView style={[styles.container, styles.centeredScreen]}>
         <ActivityIndicator size="large" color="#000" />
       </SafeAreaView>
     );
@@ -159,46 +257,44 @@ const CheckoutScreen = ({ route, navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {processing && (
-        <View style={{ ...styles.modalOverlay, backgroundColor: 'rgba(255,255,255,0.7)', justifyContent: 'center', alignItems: 'center', position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999 }}>
+      {processing ? (
+        <View style={styles.processingOverlay}>
           <ActivityIndicator size="large" color="#000" />
-          <Text style={{ marginTop: 10, fontWeight: '700' }}>กำลังดำเนินการ...</Text>
+          <Text style={styles.processingText}>กำลังดำเนินการ...</Text>
         </View>
-      )}
-      
+      ) : null}
+
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>สรุปคำสั่งซื้อ</Text>
-        <View style={{ width: 24 }} />
+        <View style={styles.headerSpacer} />
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        {/* Products Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Ionicons name="flash" size={18} color="#22C55E" />
-                <Text style={[styles.sectionTitle, { marginLeft: 8 }]}>พร้อมจัดส่ง</Text>
+            <View style={styles.inlineHeader}>
+              <Ionicons name="flash" size={18} color="#22C55E" />
+              <Text style={styles.sectionTitleWithIcon}>พร้อมจัดส่ง</Text>
             </View>
-            <Text style={{ fontSize: 12, color: '#666' }}>1-2 วัน</Text>
+            <Text style={styles.sectionMeta}>1-2 วัน</Text>
           </View>
           {checkoutItems.map(renderProductItem)}
         </View>
 
-        {/* Address Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Ionicons name="location" size={20} color="#000" />
-                <Text style={[styles.sectionTitle, { marginLeft: 8 }]}>ที่อยู่จัดส่ง</Text>
+            <View style={styles.inlineHeader}>
+              <Ionicons name="location" size={20} color="#000" />
+              <Text style={styles.sectionTitleWithIcon}>ที่อยู่จัดส่ง</Text>
             </View>
-            {selectedAddress && (
+            {selectedAddress ? (
               <TouchableOpacity onPress={() => setAddressModalVisible(true)} style={styles.changeAddressBtn}>
                 <Ionicons name="chevron-forward" size={20} color="#666" />
               </TouchableOpacity>
-            )}
+            ) : null}
           </View>
 
           {selectedAddress ? (
@@ -212,87 +308,79 @@ const CheckoutScreen = ({ route, navigation }) => {
             </View>
           ) : (
             <View style={styles.noAddressContainer}>
-              <TouchableOpacity 
-                style={styles.addAddressBtn}
-                onPress={() => navigation.navigate('AddAddress')}
-              >
+              <TouchableOpacity style={styles.addAddressBtn} onPress={() => navigation.navigate('AddAddress')}>
                 <Ionicons name="add" size={20} color="#000" />
                 <Text style={styles.addAddressText}>เพิ่มที่อยู่ใหม่</Text>
               </TouchableOpacity>
-              <View style={{ marginTop: 12, backgroundColor: '#FFFBEB', padding: 12, borderRadius: 8, flexDirection: 'row', alignItems: 'center', width: '100%' }}>
-                  <Ionicons name="warning" size={18} color="#F59E0B" />
-                  <Text style={{ color: '#F59E0B', fontSize: 13, marginLeft: 8 }}>กรุณาระบุ <Text style={{ textDecorationLine: 'underline' }}>ที่อยู่จัดส่ง</Text></Text>
-              </View>
             </View>
           )}
         </View>
 
-        {/* Shipping Method Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>ช่องทางการจัดส่ง</Text>
-          <View style={{ marginTop: 15 }}>
+          <View style={styles.shippingCard}>
             <Text style={styles.shippingType}>จัดส่งแบบ EMS</Text>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Ionicons name="time-outline" size={18} color="#666" />
-                    <Text style={{ fontSize: 13, color: '#666', marginLeft: 6 }}>คาดว่าจะได้รับภายใน 2-3 วัน</Text>
-                </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Text style={styles.shippingPrice}>฿ 0</Text>
-                    <Ionicons name="chevron-forward" size={18} color="#CCC" />
-                </View>
+            <View style={styles.shippingRow}>
+              <View style={styles.inlineHeader}>
+                <Ionicons name="time-outline" size={18} color="#666" />
+                <Text style={styles.shippingDesc}>คาดว่าจะได้รับภายใน 2-3 วัน</Text>
+              </View>
+              <Text style={styles.shippingPrice}>฿0</Text>
             </View>
           </View>
         </View>
 
-        {/* Payment & Coupon Section */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { marginBottom: 15 }]}>ชำระเงิน</Text>
-          
-          <TouchableOpacity style={styles.paymentRow}>
+          <Text style={styles.sectionTitle}>ชำระเงิน</Text>
+
+          <TouchableOpacity style={styles.paymentRow} onPress={() => setPaymentModalVisible(true)}>
             <View style={styles.paymentLeft}>
               <Ionicons name="card-outline" size={20} color="#000" />
               <Text style={styles.paymentText}>วิธีชำระเงิน</Text>
             </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Ionicons name="qr-code-outline" size={16} color="#003D87" />
-                <Text style={{ fontSize: 14, color: '#003D87', fontWeight: '600', marginLeft: 6 }}>QR PromptPay</Text>
-                <Ionicons name="chevron-forward" size={20} color="#666" />
+            <View style={styles.paymentValueWrap}>
+              <Ionicons
+                name={selectedPaymentMethod.icon}
+                size={16}
+                color={selectedPaymentMethod.accent}
+              />
+              <Text style={[styles.paymentValueText, { color: selectedPaymentMethod.accent }]}>
+                {selectedPaymentMethod.title}
+              </Text>
+              <Ionicons name="chevron-forward" size={20} color="#666" />
             </View>
           </TouchableOpacity>
 
-          <View style={{ height: 1, backgroundColor: '#F0F0F0', marginVertical: 15 }} />
+          <View style={styles.paymentMethodHint}>
+            <Text style={styles.paymentMethodHintText}>{selectedPaymentMethod.subtitle}</Text>
+          </View>
+
+          <View style={styles.divider} />
 
           <TouchableOpacity style={styles.couponRow} onPress={() => setCouponModalVisible(true)}>
             <View style={styles.paymentLeft}>
               <Ionicons name="pricetag-outline" size={20} color="#000" />
               <Text style={styles.paymentText}>โค้ดส่วนลด</Text>
             </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Text style={{ fontSize: 14, color: selectedCoupon ? '#22C55E' : '#666', fontWeight: '600' }}>
+            <View style={styles.paymentValueWrap}>
+              <Text style={[styles.couponSelectionText, selectedCoupon && styles.couponSelectionTextActive]}>
                 {selectedCoupon ? 'ใช้โค้ดส่วนลดแล้ว' : 'เลือกโค้ดส่วนลด'}
               </Text>
               <Ionicons name="chevron-forward" size={20} color="#666" />
             </View>
           </TouchableOpacity>
 
-          {selectedCoupon && (
-            <View style={[styles.appliedCoupon, { marginTop: 12 }]}>
+          {selectedCoupon ? (
+            <View style={styles.appliedCoupon}>
               <Ionicons name="ticket" size={16} color="#22C55E" />
               <Text style={styles.couponText}>ส่วนลด ฿{discountAmount.toLocaleString()}</Text>
               <TouchableOpacity onPress={() => setSelectedCoupon(null)}>
                 <Ionicons name="close-circle" size={18} color="#666" />
               </TouchableOpacity>
             </View>
-          )}
-          
-          <View style={{ marginTop: 12, flexDirection: 'row', alignItems: 'center' }}>
-              <Ionicons name="information-circle-outline" size={14} color="#AAA" />
-              <Text style={{ fontSize: 11, color: '#AAA', marginLeft: 4 }}>เพื่อให้ส่วนลดถูกต้อง ระบบจะรีเซ็ตคูปองเมื่อมีการเปลี่ยนแปลงรายละเอียดการสั่งซื้อ</Text>
-          </View>
+          ) : null}
         </View>
 
-        {/* Price Summary Section */}
         <View style={styles.section}>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>ราคาสินค้า</Text>
@@ -306,37 +394,30 @@ const CheckoutScreen = ({ route, navigation }) => {
             <Text style={styles.summaryLabel}>ค่าบริการตรวจสอบสินค้า</Text>
             <Text style={styles.summaryValue}>ฟรี</Text>
           </View>
-          {selectedCoupon && (
+          {selectedCoupon ? (
             <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, { color: '#EF4444' }]}>ส่วนลด</Text>
-              <Text style={[styles.summaryValue, { color: '#EF4444' }]}>- ฿{discountAmount.toLocaleString()}</Text>
+              <Text style={[styles.summaryLabel, styles.discountLabel]}>ส่วนลด</Text>
+              <Text style={[styles.summaryValue, styles.discountLabel]}>- ฿{discountAmount.toLocaleString()}</Text>
             </View>
-          )}
-          <View style={[styles.summaryRow, { marginTop: 10 }]}>
+          ) : null}
+          <View style={[styles.summaryRow, styles.totalRow]}>
             <Text style={styles.totalLabel}>ยอดรวมสุทธิ</Text>
             <Text style={styles.totalValue}>฿{total.toLocaleString()}</Text>
           </View>
         </View>
       </ScrollView>
 
-      {/* Footer */}
       <View style={styles.footer}>
-        <TouchableOpacity 
-          style={[styles.checkoutBtn, !selectedAddress && styles.checkoutBtnDisabled]} 
+        <TouchableOpacity
+          style={[styles.checkoutBtn, (!selectedAddress || processing) && styles.checkoutBtnDisabled]}
+          disabled={!selectedAddress || processing}
           onPress={handleCheckout}
-          disabled={!selectedAddress}
         >
-          <Text style={styles.checkoutBtnText}>
-            ดำเนินการชำระเงิน <Text style={{ color: '#000' }}>฿{total.toLocaleString()}</Text>
-          </Text>
+          <Text style={styles.checkoutBtnText}>ยืนยันคำสั่งซื้อ</Text>
         </TouchableOpacity>
-        <Text style={styles.footerAgreement}>
-          โดยการดำเนินการต่อ ฉันได้อ่านและยอมรับ <Text style={styles.linkText}>เงื่อนไขการให้บริการและข้อตกลงแล้ว</Text>
-        </Text>
       </View>
 
-      {/* Address Modal */}
-      <Modal visible={addressModalVisible} animationType="slide" transparent>
+      <Modal visible={addressModalVisible} transparent animationType="slide" onRequestClose={() => setAddressModalVisible(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
@@ -348,38 +429,33 @@ const CheckoutScreen = ({ route, navigation }) => {
             <FlatList
               data={addresses}
               keyExtractor={(item) => item.id.toString()}
+              renderItem={renderAddressOption}
               contentContainerStyle={styles.modalList}
-              renderItem={({ item }) => (
-                <TouchableOpacity 
-                  style={[styles.addressOption, selectedAddress?.id === item.id && styles.selectedAddressOption]}
-                  onPress={() => {
-                    setSelectedAddress(item);
-                    setAddressModalVisible(false);
-                  }}
-                >
-                  <Text style={styles.addressName}>{item.full_name} ({item.phone})</Text>
-                  <Text style={styles.addressText}>{item.address_detail} {item.district} {item.province} {item.zipcode}</Text>
-                </TouchableOpacity>
-              )}
-              ListFooterComponent={
-                <TouchableOpacity 
-                  style={[styles.addAddressBtn, { borderStyle: 'solid', marginTop: 10 }]}
-                  onPress={() => {
-                    setAddressModalVisible(false);
-                    navigation.navigate('AddAddress');
-                  }}
-                >
-                  <Ionicons name="add" size={20} color="#000" />
-                  <Text style={styles.addAddressText}>เพิ่มที่อยู่ใหม่</Text>
-                </TouchableOpacity>
-              }
             />
           </View>
         </View>
       </Modal>
 
-      {/* Coupon Modal */}
-      <Modal visible={couponModalVisible} animationType="slide" transparent>
+      <Modal visible={paymentModalVisible} transparent animationType="slide" onRequestClose={() => setPaymentModalVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>เลือกวิธีชำระเงิน</Text>
+              <TouchableOpacity onPress={() => setPaymentModalVisible(false)}>
+                <Ionicons name="close" size={24} color="#000" />
+              </TouchableOpacity>
+            </View>
+            <FlatList
+              data={PAYMENT_METHODS}
+              keyExtractor={(item) => item.id}
+              renderItem={renderPaymentMethodOption}
+              contentContainerStyle={styles.modalList}
+            />
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={couponModalVisible} transparent animationType="slide" onRequestClose={() => setCouponModalVisible(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
@@ -390,35 +466,21 @@ const CheckoutScreen = ({ route, navigation }) => {
             </View>
             <FlatList
               data={coupons}
-              keyExtractor={(item) => item.id.toString()}
-              contentContainerStyle={styles.modalList}
-              renderItem={({ item }) => (
-                <TouchableOpacity 
-                  style={[styles.couponOption, selectedCoupon?.id === item.id && styles.selectedCouponOption]}
+              keyExtractor={(item) => `${item.user_coupon_id || item.id}`}
+              renderItem={renderCouponOption}
+              ListHeaderComponent={(
+                <TouchableOpacity
+                  style={styles.clearCouponOption}
                   onPress={() => {
-                    setSelectedCoupon(item);
+                    setSelectedCoupon(null);
                     setCouponModalVisible(false);
                   }}
                 >
-                  <Ionicons name="ticket" size={24} color={selectedCoupon?.id === item.id ? "#22C55E" : "#666"} />
-                  <View style={[styles.couponInfo, { marginLeft: 15 }]}>
-                    <Text style={styles.couponCode}>{item.code}</Text>
-                    <Text style={styles.couponDesc}>{item.description}</Text>
-                    <Text style={{ fontSize: 11, color: '#999', marginTop: 4 }}>
-                        ลด {item.discount <= 100 ? `${item.discount}%` : `฿${item.discount}`}
-                    </Text>
-                  </View>
-                  {selectedCoupon?.id === item.id && (
-                    <Ionicons name="checkmark-circle" size={24} color="#22C55E" />
-                  )}
+                  <Ionicons name="ban-outline" size={20} color="#666" />
+                  <Text style={styles.clearCouponText}>ไม่ใช้โค้ดส่วนลด</Text>
                 </TouchableOpacity>
               )}
-              ListEmptyComponent={
-                <View style={{ alignItems: 'center', padding: 40 }}>
-                  <Ionicons name="ticket-outline" size={64} color="#DDD" />
-                  <Text style={{ color: '#999', marginTop: 10 }}>ไม่มีโค้ดส่วนลดที่ใช้งานได้</Text>
-                </View>
-              }
+              contentContainerStyle={styles.modalList}
             />
           </View>
         </View>

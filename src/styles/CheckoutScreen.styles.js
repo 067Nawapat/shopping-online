@@ -1,12 +1,29 @@
-import { StyleSheet, Dimensions, Platform } from 'react-native';
-import { COLORS, FONTS, RADIUS, SHADOW, SPACING } from './theme';
-
-const { width } = Dimensions.get('window');
+import { StyleSheet, Platform } from 'react-native';
+import { COLORS, RADIUS, SHADOW, SPACING } from './theme';
 
 export default StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F8F8F8',
+  },
+  centeredScreen: {
+    justifyContent: 'center',
+  },
+  processingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 999,
+    backgroundColor: 'rgba(255,255,255,0.78)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  processingText: {
+    marginTop: 10,
+    fontWeight: '700',
+    color: COLORS.black,
   },
   header: {
     flexDirection: 'row',
@@ -23,6 +40,9 @@ export default StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     color: COLORS.black,
+  },
+  headerSpacer: {
+    width: 24,
   },
   backButton: {
     padding: 4,
@@ -41,13 +61,25 @@ export default StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 15,
   },
+  inlineHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700',
     color: COLORS.black,
   },
-  
-  // Product Item
+  sectionTitleWithIcon: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: COLORS.black,
+    marginLeft: 8,
+  },
+  sectionMeta: {
+    fontSize: 12,
+    color: '#666',
+  },
   productItem: {
     flexDirection: 'row',
     marginBottom: 15,
@@ -86,15 +118,9 @@ export default StyleSheet.create({
     right: 0,
     bottom: 0,
   },
-
-  // Address Section
   addressContainer: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-  },
-  addressIcon: {
-    marginTop: 2,
-    marginRight: 10,
   },
   addressInfo: {
     flex: 1,
@@ -118,12 +144,12 @@ export default StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#DDD',
-    borderRadius: 8,
+    width: '100%',
     paddingVertical: 12,
     paddingHorizontal: 20,
-    width: '100%',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#DDD',
     borderStyle: 'dashed',
   },
   addAddressText: {
@@ -136,17 +162,14 @@ export default StyleSheet.create({
     paddingVertical: 4,
     paddingHorizontal: 8,
   },
-  changeAddressText: {
-    fontSize: 13,
-    color: '#007AFF',
-    fontWeight: '600',
+  shippingCard: {
+    marginTop: 15,
   },
-
-  // Shipping
-  shippingInfo: {
+  shippingRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginTop: 8,
   },
   shippingType: {
     fontSize: 14,
@@ -154,17 +177,15 @@ export default StyleSheet.create({
     color: COLORS.black,
   },
   shippingDesc: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-    marginTop: 4,
+    fontSize: 13,
+    color: '#666',
+    marginLeft: 6,
   },
   shippingPrice: {
     fontSize: 14,
     fontWeight: '700',
     color: COLORS.success,
   },
-
-  // Payment Method
   paymentRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -179,16 +200,53 @@ export default StyleSheet.create({
     color: COLORS.black,
     marginLeft: 10,
   },
-
-  // Coupon
+  paymentValueWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  paymentValueText: {
+    fontSize: 14,
+    fontWeight: '700',
+    marginLeft: 6,
+    marginRight: 6,
+  },
+  paymentMethodHint: {
+    marginTop: 12,
+    padding: 12,
+    borderRadius: 10,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  paymentMethodHintText: {
+    fontSize: 12,
+    lineHeight: 18,
+    color: '#475569',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#F0F0F0',
+    marginVertical: 15,
+  },
   couponRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+  couponSelectionText: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '600',
+    marginRight: 6,
+  },
+  couponSelectionTextActive: {
+    color: '#22C55E',
+  },
   appliedCoupon: {
     flexDirection: 'row',
     alignItems: 'center',
+    alignSelf: 'flex-start',
+    marginTop: 12,
     backgroundColor: '#F0FDF4',
     paddingHorizontal: 10,
     paddingVertical: 6,
@@ -200,15 +258,15 @@ export default StyleSheet.create({
     fontSize: 13,
     color: COLORS.success,
     fontWeight: '600',
-    marginLeft: 6,
-    marginRight: 6,
+    marginHorizontal: 6,
   },
-
-  // Summary Row
   summaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 12,
+  },
+  totalRow: {
+    marginTop: 10,
   },
   summaryLabel: {
     fontSize: 14,
@@ -218,6 +276,9 @@ export default StyleSheet.create({
     fontSize: 14,
     color: COLORS.black,
     fontWeight: '500',
+  },
+  discountLabel: {
+    color: '#EF4444',
   },
   totalLabel: {
     fontSize: 16,
@@ -229,8 +290,6 @@ export default StyleSheet.create({
     fontWeight: '800',
     color: COLORS.success,
   },
-
-  // Footer
   footer: {
     position: 'absolute',
     bottom: 0,
@@ -258,18 +317,6 @@ export default StyleSheet.create({
     fontWeight: '800',
     color: COLORS.black,
   },
-  footerAgreement: {
-    fontSize: 11,
-    color: COLORS.textMuted,
-    textAlign: 'center',
-    marginTop: 12,
-    lineHeight: 16,
-  },
-  linkText: {
-    textDecorationLine: 'underline',
-  },
-
-  // Modal
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -293,6 +340,7 @@ export default StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: '700',
+    color: COLORS.black,
   },
   modalList: {
     padding: 20,
@@ -318,20 +366,72 @@ export default StyleSheet.create({
     alignItems: 'center',
   },
   selectedCouponOption: {
-    borderColor: COLORS.success,
+    borderColor: '#22C55E',
     backgroundColor: '#F0FDF4',
   },
-  couponInfo: {
+  couponOptionBody: {
     flex: 1,
+    marginLeft: 12,
   },
-  couponCode: {
-    fontSize: 15,
+  couponOptionTitle: {
+    fontSize: 14,
     fontWeight: '700',
     color: COLORS.black,
   },
-  couponDesc: {
+  couponOptionSub: {
     fontSize: 12,
     color: COLORS.textSecondary,
-    marginTop: 2,
+    marginTop: 4,
+  },
+  clearCouponOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 15,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#EEE',
+    marginBottom: 12,
+  },
+  clearCouponText: {
+    fontSize: 14,
+    color: '#666',
+    marginLeft: 10,
+    fontWeight: '600',
+  },
+  paymentMethodOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 15,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    marginBottom: 12,
+  },
+  selectedPaymentMethodOption: {
+    borderColor: COLORS.black,
+    backgroundColor: '#FAFAFA',
+  },
+  paymentMethodIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  paymentMethodBody: {
+    flex: 1,
+    marginLeft: 12,
+    marginRight: 12,
+  },
+  paymentMethodTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: COLORS.black,
+  },
+  paymentMethodSub: {
+    fontSize: 12,
+    lineHeight: 18,
+    color: COLORS.textSecondary,
+    marginTop: 4,
   },
 });

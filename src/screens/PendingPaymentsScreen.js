@@ -80,6 +80,7 @@ const PendingPaymentsScreen = ({ navigation }) => {
           navigation.navigate('PaymentPromptPay', {
             orderId: item.id,
             totalPrice,
+            paymentMethod: item.payment_method || 'promptpay',
           })
         }
       >
@@ -119,6 +120,7 @@ const PendingPaymentsScreen = ({ navigation }) => {
               navigation.navigate('PaymentPromptPay', {
                 orderId: item.id,
                 totalPrice,
+                paymentMethod: item.payment_method || 'promptpay',
               })
             }
           >
