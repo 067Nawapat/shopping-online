@@ -151,11 +151,7 @@ function phone_values_match($detected, $expected) {
 
 function get_easyslip_token() {
     $token = trim((string)(getenv('EASYSLIP_ACCESS_TOKEN') ?: ''));
-    if ($token !== '') {
-        return $token;
-    }
-
-    return trim((string)'b7dc12c1-e290-43f7-9348-626429452461');
+    return $token;
 }
 
 function create_data_uri($base64, $mime = 'image/png') {
@@ -1153,4 +1149,3 @@ default:
 }
 
 $conn->close();
-
