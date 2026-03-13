@@ -151,7 +151,19 @@ function phone_values_match($detected, $expected) {
 
 function get_easyslip_token() {
     $token = trim((string)(getenv('EASYSLIP_ACCESS_TOKEN') ?: ''));
-    return $token;
+    if ($token !== '') {
+        return $token;
+    }
+
+    $localConfigPath = __DIR__ . '/local-config.php';
+    if (is_file($localConfigPath)) {
+        $config = require $localConfigPath;
+        if (is_array($config) && !empty($config['EASYSLIP_ACCESS_TOKEN'])) {
+            return trim((string)$config['EASYSLIP_ACCESS_TOKEN']);
+        }
+    }
+
+    return '';
 }
 
 function create_data_uri($base64, $mime = 'image/png') {

@@ -1,0 +1,5 @@
+<?php
+
+return [
+    'EASYSLIP_ACCESS_TOKEN' => 'PUT_YOUR_EASYSLIP_TOKEN_HERE',
+];

@@ -1,48 +1,41 @@
-# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
-
-# dependencies
-node_modules/
-
-# Expo
-.expo/
-dist/
-web-build/
-expo-env.d.ts
-
-# Native
-.kotlin/
-*.orig.*
-*.jks
-*.p8
-*.p12
-*.key
-*.mobileprovision
-
-# Metro
-.metro-health-check*
-
-# debug
-npm-debug.*
-yarn-debug.*
-yarn-error.*
-
-# macOS
+# Root editor files
 .DS_Store
+.idea/
+*.log
 *.pem
 
-# local env files
-.env*.local
-.idea/
+# Frontend local/build files
+shopping-online/node_modules/
+shopping-online/.expo/
+shopping-online/dist/
+shopping-online/web-build/
+shopping-online/expo-env.d.ts
+shopping-online/.kotlin/
+shopping-online/ios/
+shopping-online/android/
+shopping-online/*.orig.*
+shopping-online/*.jks
+shopping-online/*.p8
+shopping-online/*.p12
+shopping-online/*.key
+shopping-online/*.mobileprovision
+shopping-online/.metro-health-check*
+shopping-online/npm-debug.*
+shopping-online/yarn-debug.*
+shopping-online/yarn-error.*
+shopping-online/*.tsbuildinfo
+shopping-online/.env
+shopping-online/.env.*
 
-# typescript
-*.tsbuildinfo
+# Old local leftovers at repo root
+node_modules/
+.expo/
+android/
+ios/
+/assets/
 
-# generated native folders
-/ios
-/android
-
-# local backend runtime files
-/shopping-api/uploads/
-
-# local editor and temp files
-*.log
+# Backend runtime and secrets
+shopping-api/uploads/
+shopping-api/local-config.php
+shopping-api/.env
+shopping-api/.env.*
