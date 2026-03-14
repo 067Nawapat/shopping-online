@@ -1,6 +1,8 @@
 CREATE DATABASE IF NOT EXISTS shopping_db CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 USE shopping_db;
 
+SET FOREIGN_KEY_CHECKS = 0;
+
 DROP TABLE IF EXISTS addresses;
 DROP TABLE IF EXISTS banners;
 DROP TABLE IF EXISTS cart;
@@ -18,6 +20,10 @@ DROP TABLE IF EXISTS user_coupons;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS variant_attributes;
 DROP TABLE IF EXISTS wishlist;
+DROP TABLE IF EXISTS shipments;
+DROP TABLE IF EXISTS notifications;
+
+SET FOREIGN_KEY_CHECKS = 1;
 
 CREATE TABLE users (
   id INT(11) NOT NULL AUTO_INCREMENT,
@@ -135,27 +141,6 @@ CREATE TABLE wishlist (
   CONSTRAINT wishlist_ibfk_2 FOREIGN KEY (product_id) REFERENCES products (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE reviews (
-  id INT(11) NOT NULL AUTO_INCREMENT,
-  product_id INT(11) DEFAULT NULL,
-  user_id INT(11) DEFAULT NULL,
-  rating INT(11) DEFAULT NULL,
-  comment TEXT DEFAULT NULL,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (id),
-  KEY product_id (product_id),
-  CONSTRAINT reviews_ibfk_1 FOREIGN KEY (product_id) REFERENCES products (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
-CREATE TABLE review_images (
-  id INT(11) NOT NULL AUTO_INCREMENT,
-  review_id INT(11) DEFAULT NULL,
-  image_url VARCHAR(255) DEFAULT NULL,
-  PRIMARY KEY (id),
-  KEY review_id (review_id),
-  CONSTRAINT review_images_ibfk_1 FOREIGN KEY (review_id) REFERENCES reviews (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
 CREATE TABLE addresses (
   id INT(11) NOT NULL AUTO_INCREMENT,
   user_id INT(11) NOT NULL,
@@ -194,6 +179,30 @@ CREATE TABLE order_items (
   KEY idx_variant_id (variant_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+CREATE TABLE reviews (
+  id INT(11) NOT NULL AUTO_INCREMENT,
+  product_id INT(11) DEFAULT NULL,
+  user_id INT(11) DEFAULT NULL,
+  order_id INT(11) DEFAULT NULL,
+  rating INT(11) DEFAULT NULL,
+  comment TEXT DEFAULT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY product_id (product_id),
+  KEY order_id (order_id),
+  CONSTRAINT reviews_ibfk_1 FOREIGN KEY (product_id) REFERENCES products (id),
+  CONSTRAINT reviews_ibfk_2 FOREIGN KEY (order_id) REFERENCES orders (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE review_images (
+  id INT(11) NOT NULL AUTO_INCREMENT,
+  review_id INT(11) DEFAULT NULL,
+  image_url VARCHAR(255) DEFAULT NULL,
+  PRIMARY KEY (id),
+  KEY review_id (review_id),
+  CONSTRAINT review_images_ibfk_1 FOREIGN KEY (review_id) REFERENCES reviews (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 CREATE TABLE payments (
   id INT(11) NOT NULL AUTO_INCREMENT,
   order_id INT(11) DEFAULT NULL,
@@ -209,7 +218,7 @@ CREATE TABLE payments (
   UNIQUE KEY uniq_slip_hash (slip_hash)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE IF NOT EXISTS shipments (
+CREATE TABLE shipments (
     id INT AUTO_INCREMENT PRIMARY KEY,
     order_id INT NOT NULL,
     tracking_number VARCHAR(50) NOT NULL,
@@ -221,23 +230,12 @@ CREATE TABLE IF NOT EXISTS shipments (
     FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
 );
 
--- ตารางเก็บประวัติการแจ้งเตือน
-CREATE TABLE IF NOT EXISTS notifications (
+CREATE TABLE notifications (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NULL, -- NULL หมายถึงแจ้งเตือนทุกคน (Global)
+    user_id INT NULL,
     title VARCHAR(255) NOT NULL,
     body TEXT NOT NULL,
-    type VARCHAR(50) DEFAULT 'general', -- เช่น 'order', 'promo', 'system'
+    type VARCHAR(50) DEFAULT 'general',
     is_read TINYINT(1) DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- ตารางเก็บ Token ของมือถือเพื่อใช้ส่ง Push Notification
-CREATE TABLE IF NOT EXISTS user_push_tokens (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    push_token VARCHAR(255) NOT NULL,
-    device_type ENUM('ios', 'android') DEFAULT 'android',
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    UNIQUE KEY uniq_user_token (user_id, push_token)
 );
