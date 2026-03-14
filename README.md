@@ -1,391 +1,102 @@
-# Shopping Online
+# Shopping Online (Sasom-like eCommerce Project)
 
-โปรเจกต์นี้เป็นระบบร้านค้าออนไลน์ที่แยกออกเป็น 2 ส่วนชัดเจน
+โปรเจกต์นี้เป็นระบบร้านค้าออนไลน์ที่สมบูรณ์แบบ แยกออกเป็น 2 ส่วนชัดเจน รองรับทั้งแอปพลิเคชันมือถือและระบบจัดการหลังบ้านผ่านหน้าเว็บ
 
-- `shopping-online/` สำหรับแอปมือถือฝั่งผู้ใช้ด้วย React Native + Expo
-- `shopping-api/` สำหรับ PHP API ที่รันบน XAMPP และเชื่อมต่อ MySQL
+- `shopping-online/` : แอปพลิเคชันมือถือสำหรับลูกค้า พัฒนาด้วย **React Native + Expo**
+- `shopping-api/` : ระบบ API และระบบจัดการ (Admin Panel) พัฒนาด้วย **PHP + MySQL** รันบน XAMPP
 
-README นี้อธิบายให้ครบว่าโปรเจกต์นี้ทำอะไรได้บ้าง ใช้อะไรบ้าง ติดตั้งอย่างไร ต้องแก้ค่าอะไรตรงไหน และสร้างฐานข้อมูลอย่างไร
+---
 
-## โปรเจกต์นี้ทำอะไรได้บ้าง
+## 🌟 ฟีเจอร์เด่นของโปรเจกต์
 
-ระบบนี้รองรับ flow หลักของร้านค้าออนไลน์ดังนี้
+### ฝั่งแอปพลิเคชันลูกค้า (Mobile App)
+- **ระบบสมาชิก:** สมัครสมาชิก, เข้าสู่ระบบ และรองรับ **Google Login**
+- **การจัดการโปรไฟล์:** อัปเดตรูปภาพโปรไฟล์จาก Google อัตโนมัติ, แก้ไขข้อมูลส่วนตัว, วันเกิด และเพศ
+- **เลือกซื้อสินค้า:** 
+  - ค้นหาสินค้าแบบ Real-time (Search)
+  - แยกหมวดหมู่สินค้า (Category)
+  - รายละเอียดสินค้าพร้อมรูปภาพหลายมุมมอง
+  - ระบบสิ่งที่อยากได้ (Wishlist)
+  - ตะกร้าสินค้า (Cart) พร้อมเลือกไซซ์และสี
+- **ระบบคำสั่งซื้อ:**
+  - สร้างคำสั่งซื้อ (Order) พร้อมรองรับคูปองส่วนลด
+  - เลือกวิธีชำระเงิน: **PromptPay (QR)** และ **TrueMoney Wallet**
+  - อัปโหลดสลิปและตรวจสอบสลิปอัตโนมัติผ่าน **EasySlip API**
+  - ติดตามสถานะพัสดุ (Tracking) เชื่อมต่อกับไปรษณีย์ไทย
+  - **รีวิวสินค้า:** ให้คะแนนและรูปภาพ (จำกัด 1 รีวิว ต่อ 1 รายการสั่งซื้อ)
+- **การแจ้งเตือน:** ระบบดึงข้อมูลการแจ้งเตือนจากฐานข้อมูลมาแสดงผลในแอป
 
-- สมัครสมาชิก / เข้าสู่ระบบ
-- เข้าสู่ระบบด้วย Google
-- ดูสินค้า แยกหมวดหมู่ ค้นหา และดูรายละเอียดสินค้า
-- ดูรูปสินค้า รีวิวสินค้า และตัวเลือกสินค้า เช่น ขนาด
-- เพิ่มสินค้าเข้าตะกร้า
-- เพิ่ม / แก้ไข / ลบ ที่อยู่จัดส่ง
-- เลือกคูปอง
-- สร้างคำสั่งซื้อ
-- เลือกวิธีชำระเงิน
-- รองรับการชำระแบบ `PromptPay`
-- รองรับการชำระแบบ `TrueMoney Wallet`
-- สร้าง QR PromptPay ผ่าน EasySlip
-- อัปโหลดสลิปเพื่อตรวจสอบการชำระเงิน
-- กันสลิปซ้ำ
-- ปฏิเสธสลิปที่ยอดเงินหรือข้อมูลผู้รับไม่ตรง
-- แสดงรายการออเดอร์ที่รอชำระ
+### ฝั่งระบบจัดการ (PHP Admin Panel)
+- **Dashboard:** สรุปยอดขายและสถิติต่างๆ
+- **จัดการคำสั่งซื้อ:** ตรวจสอบสลิป, ยืนยันยอดเงิน, อัปเดตสถานะการจัดส่ง และใส่เลขพัสดุ
+- **จัดการสินค้า:** เพิ่ม/แก้ไข/ลบ สินค้า, ราคา, สต็อก และรูปภาพสินค้า
+- **จัดการคูปอง:** สร้างโค้ดส่วนลดกำหนดวันหมดอายุและจำนวนได้
+- **จัดการแจ้งเตือน:** ส่งข่าวสารหรือโปรโมชันหาผู้ใช้ทุกคน (Push Logic Ready)
+- **จัดการหมวดหมู่และแบนเนอร์:** ปรับแต่งหน้า Home ของแอปได้ผ่านหลังบ้าน
 
-## เทคโนโลยีที่ใช้
+---
 
-### ฝั่งแอป `shopping-online/`
+## 🛠 เทคโนโลยีที่ใช้
 
-- React Native
-- Expo
-- React Navigation
-- Axios
-- AsyncStorage
-- Expo Image Picker
-- Expo Media Library
-- Expo File System
+### Frontend (Mobile)
+- **React Native (Expo SDK 55)**
+- **React Navigation** (Stack & Tabs)
+- **Axios** (API Client)
+- **AsyncStorage** (Local Storage)
+- **Expo Image Picker & File System**
 
-### ฝั่ง API `shopping-api/`
+### Backend (Server & API)
+- **PHP 8.x**
+- **MySQL / MariaDB**
+- **cURL** (สำหรับการเชื่อมต่อ API ภายนอก)
+- **EasySlip API** (ตรวจสอบสลิปธนาคาร)
+- **Bootstrap 5** (สำหรับ Admin UI)
 
-- PHP
-- MySQL / MariaDB
-- XAMPP
-- cURL
-- EasySlip API
+---
 
-## โครงสร้างโปรเจกต์
+## 🚀 การติดตั้งและตั้งค่า
 
-```text
-Shopping-Online/
-|- shopping-online/
-|  |- App.js
-|  |- package.json
-|  |- assets/
-|  |- src/
-|     |- api/
-|     |- config/
-|     |- screens/
-|     |- styles/
-|     |- utils/
-|
-|- shopping-api/
-|  |- api.php
-|  |- schema.sql
-|  |- local-config.example.php
-|
-|- .gitignore
-|- README.md
-```
-
-## ไฟล์ที่ควรรู้ก่อนเริ่ม
-
-### ฝั่งแอป
-
-- [shopping-online/App.js](/D:/shopping-online/shopping-online/App.js)
-- [shopping-online/package.json](/D:/shopping-online/shopping-online/package.json)
-- [shopping-online/src/api/apiService.js](/D:/shopping-online/shopping-online/src/api/apiService.js)
-- [shopping-online/src/config/appConfig.js](/D:/shopping-online/shopping-online/src/config/appConfig.js)
-- [shopping-online/src/screens/CheckoutScreen.js](/D:/shopping-online/shopping-online/src/screens/CheckoutScreen.js)
-- [shopping-online/src/screens/PaymentPromptPayScreen.js](/D:/shopping-online/shopping-online/src/screens/PaymentPromptPayScreen.js)
-
-### ฝั่ง API
-
-- [shopping-api/api.php](/D:/shopping-online/shopping-api/api.php)
-- [shopping-api/schema.sql](/D:/shopping-online/shopping-api/schema.sql)
-- [shopping-api/local-config.example.php](/D:/shopping-online/shopping-api/local-config.example.php)
-
-## การติดตั้งฝั่งแอป `shopping-online/`
-
-### 1. เข้าไปที่โฟลเดอร์แอป
-
-```bash
-cd shopping-online
-```
-
-### 2. ติดตั้ง dependencies
-
-```bash
-npm install
-```
-
-### 3. รันบน Android แบบที่โปรเจกต์นี้ใช้
-
-```bash
-npx expo run:android
-```
-
-หมายเหตุ:
-
-- ต้องเปิด Android Emulator หรือเสียบมือถือ Android ที่เปิด USB Debugging ไว้ก่อน
-- ถ้ายังไม่เคยเซ็ต Android Studio / Android SDK ให้ทำส่วนนั้นก่อน
-
-## การติดตั้งฝั่ง API `shopping-api/`
-
-### 1. นำโฟลเดอร์ API ไปวางใน XAMPP
-
-ให้นำโฟลเดอร์ `shopping-api` ไปไว้ที่ path นี้
-
-```text
-C:\xampp\htdocs\shopping-api
-```
-
-สรุป path ที่ใช้งานจริงควรเป็นประมาณนี้
-
-```text
-C:\xampp\htdocs\shopping-api\api.php
-```
-
-### 2. เปิด XAMPP
-
-ให้เปิด
-
-- Apache
-- MySQL
-
-### 3. สร้างฐานข้อมูล
-
-โปรเจกต์นี้ใช้ฐานข้อมูลชื่อ
-
-```text
-shopping_db
-```
-
-คุณสามารถสร้างฐานข้อมูลได้ 2 แบบ
-
-#### แบบที่ 1: ใช้ phpMyAdmin
-
-1. เข้า `http://localhost/phpmyadmin`
+### 1. การเตรียมฐานข้อมูล (MySQL)
+1. เปิด **phpMyAdmin** หรือ Tool จัดการฐานข้อมูลของคุณ
 2. สร้างฐานข้อมูลชื่อ `shopping_db`
-3. เลือกฐานข้อมูล `shopping_db`
-4. ไปที่เมนู `Import`
-5. เลือกไฟล์ [shopping-api/schema.sql](/D:/shopping-online/shopping-api/schema.sql)
-6. กด Import
-
-#### แบบที่ 2: ใช้คำสั่ง SQL ตรง ๆ
-
-```sql
-CREATE DATABASE IF NOT EXISTS shopping_db CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-USE shopping_db;
-```
-
-จากนั้นให้รันไฟล์ [shopping-api/schema.sql](/D:/shopping-online/shopping-api/schema.sql)
-
-## โค้ดสร้างฐานข้อมูล
-
-โปรเจกต์นี้มีไฟล์ schema เตรียมไว้แล้วที่:
-
-- [shopping-api/schema.sql](/D:/shopping-online/shopping-api/schema.sql)
-
-ไฟล์นี้ประกอบด้วยโค้ดสร้างตารางหลักทั้งหมด เช่น
-
-- `users`
-- `products`
-- `product_variants`
-- `product_images`
-- `categories`
-- `cart`
-- `wishlist`
-- `reviews`
-- `review_images`
-- `addresses`
-- `coupons`
-- `user_coupons`
-- `orders`
-- `order_items`
-- `payments`
-- `banners`
-- `variant_attributes`
-
-ถ้าต้องการสร้างใหม่ทั้งหมด ให้ import ไฟล์ `schema.sql` ได้เลย
-
-## จุดที่ต้องแก้ก่อนใช้งานจริง
-
-## 1. แก้ API URL ของแอป
-
-ให้แก้ที่ไฟล์:
-
-- [shopping-online/src/config/appConfig.js](/D:/shopping-online/shopping-online/src/config/appConfig.js)
-
-ตอนนี้ค่าใน repo เป็นตัวอย่าง:
-
-```js
-export const APP_CONFIG = {
-  API_BASE_URL: 'http://YOUR_LAN_IP/shopping-api/',
-  PROMPTPAY_NUMBER: 'CHANGE_PROMPTPAY_NUMBER',
-  TRUE_MONEY_NUMBER: 'CHANGE_TRUE_MONEY_NUMBER',
-};
-```
-
-ให้เปลี่ยน `API_BASE_URL` ให้ตรงกับเครื่องที่รัน API
-
-ตัวอย่าง:
-
-- Android Emulator
-
-```js
-API_BASE_URL: 'http://10.0.2.2/shopping-api/'
-```
-
-- มือถือจริงในวง LAN
-
-```js
-API_BASE_URL: 'http://192.168.1.100/shopping-api/'
-```
-
-สำคัญ:
-
-- ค่าใน `API_BASE_URL` ต้องลงท้ายด้วย `/`
-- ตัวแอปจะต่อ path เป็น `api.php?action=...` เอง
-
-## 2. แก้เบอร์ PromptPay และ TrueMoney Wallet
-
-ฝั่งแอปต้องแก้ที่:
-
-- [shopping-online/src/config/appConfig.js](/D:/shopping-online/shopping-online/src/config/appConfig.js)
-
-ฝั่ง API ต้องแก้ที่:
-
-- `shopping-api/local-config.php` หรือ environment variable
-
-### วิธีตั้งค่าฝั่ง API แบบแนะนำ
-
-คัดลอกไฟล์ตัวอย่าง:
-
-- [shopping-api/local-config.example.php](/D:/shopping-online/shopping-api/local-config.example.php)
-
-ให้เป็น:
-
-```text
-shopping-api/local-config.php
-```
-
-แล้วใส่ค่าจริงแบบนี้:
-
-```php
-<?php
-
-return [
-    'EASYSLIP_ACCESS_TOKEN' => 'YOUR_REAL_EASYSLIP_TOKEN',
-    'PROMPTPAY_NUMBER' => 'YOUR_PROMPTPAY_NUMBER',
-    'TRUE_MONEY_NUMBER' => 'YOUR_TRUE_MONEY_NUMBER',
-];
-```
-
-ข้อสำคัญ:
-
-- `shopping-api/local-config.php` ถูก ignore แล้ว
-- ห้าม commit ไฟล์นี้ขึ้น GitHub
-
-## 3. ตั้งค่า EasySlip token
-
-ตั้งค่าได้ 2 วิธี
-
-### วิธีที่แนะนำที่สุด
-
-ตั้งเป็น environment variable ฝั่ง server:
-
-```text
-EASYSLIP_ACCESS_TOKEN=YOUR_REAL_EASYSLIP_TOKEN
-```
-
-### วิธี local แบบง่าย
-
-ใส่ไว้ใน:
-
-```text
-shopping-api/local-config.php
-```
-
-## เบอร์ PromptPay และ Wallet ของคุณหลุดไปแล้วไหม
-
-ถ้าหมายถึงเบอร์ที่เคยใส่ไว้ใน source code ก่อนหน้านี้ คำตอบคือ:
-
-- ใช่ มีโอกาสถือว่า “หลุด” แล้ว ถ้าเคย push ขึ้น GitHub
-
-ดังนั้นรอบนี้ผมแก้ให้แล้วโดย:
-
-- เอาเบอร์ออกจากไฟล์หลักที่เคย hardcode
-- ย้ายไปไว้ในจุด config ที่แก้ได้ง่าย
-- เปลี่ยนค่าที่อยู่ใน repo ให้เป็น placeholder
-
-คำแนะนำ:
-
-1. เปลี่ยนเบอร์หรือใช้เบอร์ใหม่ถ้ากังวลเรื่องการนำไปใช้ต่อ
-2. อย่า push เบอร์จริงและ token จริงขึ้น GitHub
-3. ให้เก็บค่าจริงไว้ใน `local-config.php` หรือ environment variable เท่านั้น
-
-## ค่า config ที่ระบบอ่านอยู่ตอนนี้
-
-### ฝั่งแอป
-
-- `API_BASE_URL`
-- `PROMPTPAY_NUMBER`
-- `TRUE_MONEY_NUMBER`
-
-จากไฟล์:
-
-- [shopping-online/src/config/appConfig.js](/D:/shopping-online/shopping-online/src/config/appConfig.js)
-
-### ฝั่ง API
-
-- `EASYSLIP_ACCESS_TOKEN`
-- `PROMPTPAY_NUMBER`
-- `TRUE_MONEY_NUMBER`
-
-จาก:
-
-- environment variable
-- หรือ `shopping-api/local-config.php`
-
-## ตัวอย่างลำดับการติดตั้งทั้งหมด
-
-### 1. clone repo
-
-```bash
-git clone https://github.com/067Nawapat/Shopping-Online.git
-cd Shopping-Online
-```
-
-### 2. ตั้งค่าฝั่ง API
-
-1. คัดลอก `shopping-api` ไปไว้ที่ `C:\xampp\htdocs\shopping-api`
-2. import ไฟล์ `shopping-api/schema.sql`
-3. สร้าง `shopping-api/local-config.php`
-4. ใส่ token และเบอร์ที่ใช้งานจริง
-
-### 3. ตั้งค่าฝั่งแอป
-
-1. เปิดไฟล์ `shopping-online/src/config/appConfig.js`
-2. แก้ `API_BASE_URL`
-3. แก้ `PROMPTPAY_NUMBER`
-4. แก้ `TRUE_MONEY_NUMBER`
-
-### 4. รันแอป
-
-```bash
-cd shopping-online
-npm install
-npx expo run:android
-```
-
-## การกันข้อมูลลับหลุดขึ้น GitHub
-
-ตอนนี้ `.gitignore` กันไว้แล้วสำหรับ:
-
-- `shopping-api/local-config.php`
-- `shopping-api/uploads/`
-- `shopping-online/node_modules/`
-- `shopping-online/.expo/`
-- `.env` ต่าง ๆ
-
-ก่อน push ควรเช็กอย่างน้อย:
-
-```bash
-git status
-git diff --cached
-```
-
-และควรเช็กว่าไม่มีข้อมูลพวกนี้อยู่ในไฟล์ที่กำลังจะ commit:
-
-- EasySlip token
-- เบอร์ PromptPay จริง
-- เบอร์ TrueMoney Wallet จริง
-- URL ภายในองค์กรหรือ IP ที่ไม่อยากเผยแพร่
-- รูปสลิปจริงของลูกค้า
-
+3. Import ไฟล์ `shopping-api/schema.sql` และตามด้วย `shopping-api/seed.sql` (สำหรับข้อมูลตัวอย่าง)
+
+### 2. ตั้งค่าฝั่ง API (shopping-api)
+1. นำโฟลเดอร์ `shopping-api` ไปวางใน `C:\xampp\htdocs\`
+2. คัดลอกไฟล์ `local-config.example.php` เป็น `local-config.php`
+3. ใส่ค่าจริงใน `local-config.php`:
+   ```php
+   return [
+       'EASYSLIP_ACCESS_TOKEN' => 'โทเค็น_EASYSLIP_ของคุณ',
+       'PROMPTPAY_NUMBER' => 'เบอร์_พร้อมเพย์_ของคุณ',
+       'TRUE_MONEY_NUMBER' => 'เบอร์_วอลเล็ต_ของคุณ',
+       'THAIPOST_TOKEN' => 'โทเค็น_ไปรษณีย์ไทย_ของคุณ',
+   ];
+   ```
+
+### 3. ตั้งค่าฝั่งแอปมือถือ (shopping-online)
+1. เข้าไปที่โฟลเดอร์โปรเจกต์: `cd shopping-online`
+2. ติดตั้ง Library: `npm install`
+3. แก้ไขไฟล์ `src/config/appConfig.js`:
+   - เปลี่ยน `API_BASE_URL` ให้ตรงกับ IP เครื่องคอมพิวเตอร์ของคุณ (ตรวจสอบด้วยคำสั่ง `ipconfig`)
+   - ตัวอย่าง: `http://192.168.1.50/shopping-api/`
+4. รันแอป: `npx expo run:android` หรือ `npx expo start`
+
+---
+
+## 📂 โครงสร้างโฟลเดอร์ที่สำคัญ
+- `shopping-api/admin/` : หน้าเว็บสำหรับผู้ดูแลระบบ
+- `shopping-api/routes/` : ไฟล์ Logic แยกตามฟังก์ชัน (Auth, Products, Orders, Notifications)
+- `shopping-online/src/screens/` : หน้าจอต่างๆ ในแอปมือถือ
+- `shopping-online/src/api/apiService.js` : ศูนย์กลางการเชื่อมต่อ API ทั้งหมด
+
+---
+
+## 🔐 ความปลอดภัย
+- รหัสผ่านผู้ใช้ถูกเข้ารหัสด้วย **BCRYPT**
+- ระบบรองรับการตรวจสอบ Google ID Token เพื่อยืนยันตัวตนจริงจาก Google
+- ข้อมูลลับเช่น API Keys ถูกแยกเก็บในไฟล์ `local-config.php` ซึ่งถูกกันไม่ให้ Push ขึ้น GitHub ผ่าน `.gitignore`
+
+---
+
+**พัฒนาโดย:** [067Nawapat](https://github.com/067Nawapat)
