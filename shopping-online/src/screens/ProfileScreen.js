@@ -179,20 +179,6 @@ const ProfileScreen = ({ navigation }) => {
           </View>
         </View>
 
-        {/* ── Admin Section (Only for Admins) ── */}
-        {user?.role === 'admin' && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>ผู้ดูแลระบบ (Admin)</Text>
-            </View>
-            <MenuItem
-              icon="megaphone-outline"
-              label="ส่งการแจ้งเตือน Push"
-              onPress={() => navigation.navigate('AdminNotification')}
-            />
-          </View>
-        )}
-
         {/* ── Account ── */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
